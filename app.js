@@ -1436,6 +1436,9 @@ function renderOrdersHistory() {
       </td>
       <td class="py-3.5 px-4 text-center whitespace-nowrap">
         <div class="inline-flex items-center gap-1.5 shrink-0 flex-nowrap whitespace-nowrap">
+          <button onclick="openEditReceiptModal('${order.id}')" title="Edit Receipt" class="px-2 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-thermal font-bold text-xs flex items-center gap-1 transition shadow-xs">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit
+          </button>
           <button onclick="directPrintReceipt('${order.id}')" title="Direct Print Receipt" class="px-2 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-black font-thermal font-bold text-xs flex items-center gap-1 shadow-xs transition">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
           </button>
@@ -1482,6 +1485,337 @@ function deleteOrderRecord(orderId) {
     showToast(`Receipt ${orderId} deleted`, 'info');
   }
 }
+
+/* ==========================================================================
+   RECEIPT EDITING SYSTEM
+   ========================================================================== */
+
+function handleEditCurrentReceipt() {
+  if (currentViewingOrder) {
+    openEditReceiptModal(currentViewingOrder.id);
+  }
+}
+
+function openEditReceiptModal(orderId) {
+  if (isCustomerVerificationMode || !isAdminLoggedIn()) {
+    showToast('Admin authentication required to edit receipts', 'error');
+    return;
+  }
+
+  const order = orders.find(o => o.id === orderId) || currentViewingOrder;
+  if (!order) {
+    showToast(`Receipt ${orderId} not found`, 'error');
+    return;
+  }
+
+  // Populate IDs & Meta
+  const origIdEl = document.getElementById('edit-original-order-id');
+  if (origIdEl) origIdEl.value = order.id;
+
+  const badgeEl = document.getElementById('edit-modal-receipt-badge');
+  if (badgeEl) badgeEl.textContent = order.id;
+
+  const idInput = document.getElementById('edit-receipt-id');
+  if (idInput) idInput.value = order.id;
+
+  // Date
+  let dateVal = '';
+  try {
+    dateVal = new Date(order.date).toISOString().slice(0, 10);
+  } catch (e) {
+    dateVal = new Date().toISOString().slice(0, 10);
+  }
+  const dateInput = document.getElementById('edit-receipt-date');
+  if (dateInput) dateInput.value = dateVal;
+
+  const cashierInput = document.getElementById('edit-receipt-cashier');
+  if (cashierInput) cashierInput.value = order.cashier || 'ASHA';
+
+  // Customer
+  const cust = order.customer || {};
+  const nameInput = document.getElementById('edit-cust-name');
+  if (nameInput) nameInput.value = cust.name || cust.id || '';
+  const noInput = document.getElementById('edit-cust-no');
+  if (noInput) noInput.value = cust.customerNo || '';
+  const addrInput = document.getElementById('edit-cust-address');
+  if (addrInput) addrInput.value = cust.address || '';
+  const phoneInput = document.getElementById('edit-cust-phone');
+  if (phoneInput) phoneInput.value = cust.phone || '';
+
+  // Pricing
+  const pricing = order.pricing || {};
+  const discInput = document.getElementById('edit-discount-input');
+  if (discInput) discInput.value = typeof pricing.discount === 'number' ? pricing.discount : 0;
+  const taxInput = document.getElementById('edit-tax-rate-input');
+  if (taxInput) taxInput.value = typeof pricing.taxRate === 'number' ? pricing.taxRate : 20;
+
+  // Payment
+  const payment = order.payment || {};
+  const methodInput = document.getElementById('edit-payment-method');
+  if (methodInput) methodInput.value = payment.method || 'VISA';
+  const statusInput = document.getElementById('edit-payment-status');
+  if (statusInput) statusInput.value = payment.status || 'Paid';
+  const acctInput = document.getElementById('edit-trans-acct');
+  if (acctInput) acctInput.value = payment.acct || '';
+  const authInput = document.getElementById('edit-trans-auth');
+  if (authInput) authInput.value = payment.authCode || '';
+  const entryInput = document.getElementById('edit-trans-entry');
+  if (entryInput) entryInput.value = payment.entryMethod || 'CHIP READ';
+  const aidInput = document.getElementById('edit-trans-aid');
+  if (aidInput) aidInput.value = payment.aid || '';
+
+  // Warranty
+  const warrantyInput = document.getElementById('edit-warranty-text');
+  if (warrantyInput) warrantyInput.value = order.warranty || (appSettings && appSettings.footer) || '';
+
+  // Items
+  const itemsContainer = document.getElementById('edit-items-container');
+  if (itemsContainer) {
+    itemsContainer.innerHTML = '';
+    const rawItems = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
+    rawItems.forEach(item => {
+      addEditReceiptItemRow(item);
+    });
+    if (rawItems.length === 0) {
+      addEditReceiptItemRow();
+    }
+  }
+
+  recalculateEditTotals();
+
+  const modal = document.getElementById('edit-receipt-modal');
+  if (modal) modal.classList.remove('hidden');
+
+  if (window.lucide) {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+}
+
+function closeEditReceiptModal() {
+  const modal = document.getElementById('edit-receipt-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function addEditReceiptItemRow(itemData = {}) {
+  const container = document.getElementById('edit-items-container');
+  if (!container) return;
+
+  const card = document.createElement('div');
+  card.className = 'edit-item-card p-3 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2';
+
+  const priceVal = typeof itemData.price === 'number' ? itemData.price.toFixed(2) : (itemData.price || '');
+  const qtyVal = itemData.qty || 1;
+
+  card.innerHTML = `
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+        <div class="sm:col-span-6">
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Product Title</label>
+          <input type="text" class="edit-item-name w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 text-xs focus:ring-2 focus:ring-slate-900" value="${escapeHTML(itemData.name || '')}" placeholder="Product title" required />
+        </div>
+        <div class="sm:col-span-3">
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Qty</label>
+          <input type="number" min="1" class="edit-item-qty w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 text-xs text-center focus:ring-2 focus:ring-slate-900" value="${qtyVal}" oninput="recalculateEditTotals()" required />
+        </div>
+        <div class="sm:col-span-3">
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Unit Price (£)</label>
+          <input type="number" step="0.01" min="0" class="edit-item-price w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 text-xs focus:ring-2 focus:ring-slate-900" value="${priceVal}" oninput="recalculateEditTotals()" placeholder="0.00" required />
+        </div>
+      </div>
+      <button type="button" onclick="this.closest('.edit-item-card').remove(); recalculateEditTotals();" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition shrink-0 mt-3" title="Delete Product">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+      </button>
+    </div>
+    
+    <!-- Left-aligned identifiers (IMEI1, IMEI2, S/N, SKU) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-100">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase">IMEI 1</label>
+        <input type="text" class="edit-item-imei1 w-full px-2 py-1 rounded-md border border-slate-200 font-mono text-[11px] font-bold focus:ring-1 focus:ring-slate-900" value="${escapeHTML(itemData.imei1 || '')}" placeholder="3535..." />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase">IMEI 2</label>
+        <input type="text" class="edit-item-imei2 w-full px-2 py-1 rounded-md border border-slate-200 font-mono text-[11px] font-bold focus:ring-1 focus:ring-slate-900" value="${escapeHTML(itemData.imei2 || '')}" placeholder="3535..." />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase">Serial (S/N)</label>
+        <input type="text" class="edit-item-sn w-full px-2 py-1 rounded-md border border-slate-200 font-mono text-[11px] font-bold focus:ring-1 focus:ring-slate-900" value="${escapeHTML(itemData.sn || '')}" placeholder="S/N..." />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase">SKU</label>
+        <input type="text" class="edit-item-sku w-full px-2 py-1 rounded-md border border-slate-200 font-mono text-[11px] font-bold focus:ring-1 focus:ring-slate-900" value="${escapeHTML(itemData.sku || '')}" placeholder="511" />
+      </div>
+    </div>
+  `;
+
+  container.appendChild(card);
+  if (window.lucide) {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+}
+
+function recalculateEditTotals() {
+  const container = document.getElementById('edit-items-container');
+  if (!container) return;
+  const cards = container.querySelectorAll('.edit-item-card');
+  let subtotal = 0;
+  cards.forEach(card => {
+    const qty = parseInt(card.querySelector('.edit-item-qty')?.value, 10) || 1;
+    const price = parseFloat(card.querySelector('.edit-item-price')?.value) || 0;
+    subtotal += (qty * price);
+  });
+
+  const discount = parseFloat(document.getElementById('edit-discount-input')?.value) || 0;
+  const taxRate = parseFloat(document.getElementById('edit-tax-rate-input')?.value) || 20;
+  
+  const taxable = Math.max(0, subtotal - discount);
+  const taxAmount = taxable * (taxRate / 100);
+  const grandTotal = taxable + taxAmount;
+
+  const countEl = document.getElementById('edit-items-count');
+  if (countEl) countEl.textContent = cards.length;
+
+  const curr = (appSettings && appSettings.currency) || '£';
+  const subEl = document.getElementById('edit-summary-subtotal');
+  if (subEl) subEl.textContent = `${curr}${subtotal.toFixed(2)}`;
+  const discEl = document.getElementById('edit-summary-discount');
+  if (discEl) discEl.textContent = `-${curr}${discount.toFixed(2)}`;
+  const taxEl = document.getElementById('edit-summary-tax');
+  if (taxEl) taxEl.textContent = `${curr}${taxAmount.toFixed(2)}`;
+  const totalEl = document.getElementById('edit-summary-total');
+  if (totalEl) totalEl.textContent = `${curr}${grandTotal.toFixed(2)}`;
+}
+
+function handleSaveEditedReceipt(e) {
+  if (e) e.preventDefault();
+  if (isCustomerVerificationMode || !isAdminLoggedIn()) {
+    showToast('Admin authentication required', 'error');
+    return;
+  }
+
+  const originalId = document.getElementById('edit-original-order-id')?.value;
+  const newId = (document.getElementById('edit-receipt-id')?.value || '').trim();
+  if (!newId) {
+    showToast('Receipt number cannot be blank', 'error');
+    return;
+  }
+
+  const orderIndex = orders.findIndex(o => o.id === originalId);
+  if (orderIndex === -1) {
+    showToast('Original receipt record not found', 'error');
+    return;
+  }
+
+  const container = document.getElementById('edit-items-container');
+  const cards = container ? container.querySelectorAll('.edit-item-card') : [];
+  const items = [];
+  let subtotal = 0;
+
+  cards.forEach(card => {
+    const name = (card.querySelector('.edit-item-name')?.value || '').trim();
+    const qty = parseInt(card.querySelector('.edit-item-qty')?.value, 10) || 1;
+    const price = parseFloat(card.querySelector('.edit-item-price')?.value) || 0;
+    const imei1 = (card.querySelector('.edit-item-imei1')?.value || '').trim();
+    const imei2 = (card.querySelector('.edit-item-imei2')?.value || '').trim();
+    const sn = (card.querySelector('.edit-item-sn')?.value || '').trim();
+    const sku = (card.querySelector('.edit-item-sku')?.value || '').trim();
+
+    if (name) {
+      const total = qty * price;
+      subtotal += total;
+      items.push({
+        name,
+        qty,
+        price,
+        total,
+        imei1,
+        imei2,
+        sn,
+        sku,
+        selectedFields: {
+          imei1: !!imei1,
+          imei2: !!imei2,
+          sn: !!sn,
+          sku: !!sku
+        }
+      });
+    }
+  });
+
+  if (items.length === 0) {
+    showToast('Please have at least one product on the receipt', 'error');
+    return;
+  }
+
+  const discount = parseFloat(document.getElementById('edit-discount-input')?.value) || 0;
+  const taxRate = parseFloat(document.getElementById('edit-tax-rate-input')?.value) || 20;
+  const taxable = Math.max(0, subtotal - discount);
+  const taxAmount = taxable * (taxRate / 100);
+  const grandTotal = taxable + taxAmount;
+
+  const dateVal = document.getElementById('edit-receipt-date')?.value;
+  let isoDate = orders[orderIndex].date;
+  if (dateVal) {
+    try {
+      isoDate = new Date(dateVal).toISOString();
+    } catch (err) {}
+  }
+
+  const custName = (document.getElementById('edit-cust-name')?.value || 'CUSTOMER').trim();
+  const custNo = (document.getElementById('edit-cust-no')?.value || 'N/A').trim();
+  const custAddr = (document.getElementById('edit-cust-address')?.value || 'N/A').trim();
+  const custPhone = (document.getElementById('edit-cust-phone')?.value || '').trim();
+
+  const updatedOrder = {
+    ...orders[orderIndex],
+    id: newId,
+    date: isoDate,
+    cashier: (document.getElementById('edit-receipt-cashier')?.value || 'ASHA').trim(),
+    customer: {
+      name: custName,
+      id: custName,
+      customerNo: custNo,
+      address: custAddr,
+      phone: custPhone
+    },
+    items,
+    pricing: {
+      subtotal,
+      discount,
+      taxRate,
+      taxAmount,
+      grandTotal
+    },
+    payment: {
+      method: document.getElementById('edit-payment-method')?.value || 'VISA',
+      status: document.getElementById('edit-payment-status')?.value || 'Paid',
+      acct: (document.getElementById('edit-trans-acct')?.value || '****3471').trim(),
+      authCode: (document.getElementById('edit-trans-auth')?.value || '465116').trim(),
+      entryMethod: (document.getElementById('edit-trans-entry')?.value || 'CHIP READ').trim(),
+      aid: (document.getElementById('edit-trans-aid')?.value || 'A000004123645').trim()
+    },
+    warranty: (document.getElementById('edit-warranty-text')?.value || '').trim()
+  };
+
+  orders[orderIndex] = updatedOrder;
+  saveOrders(orders);
+
+  closeEditReceiptModal();
+  showToast(`Receipt #${updatedOrder.id} successfully updated!`, 'success');
+
+  // Immediately refresh the receipt modal view if it is open
+  const receiptModal = document.getElementById('receipt-modal');
+  if (receiptModal && !receiptModal.classList.contains('hidden')) {
+    openReceiptModal(updatedOrder);
+  }
+}
+
+window.openEditReceiptModal = openEditReceiptModal;
+window.closeEditReceiptModal = closeEditReceiptModal;
+window.handleEditCurrentReceipt = handleEditCurrentReceipt;
+window.addEditReceiptItemRow = addEditReceiptItemRow;
+window.recalculateEditTotals = recalculateEditTotals;
+window.handleSaveEditedReceipt = handleSaveEditedReceipt;
 
 /* ==========================================================================
    DASHBOARD STATS & RECENT FEED
@@ -1549,6 +1883,9 @@ function renderRecentDashboardOrders() {
       <div class="flex items-center justify-between sm:justify-end gap-3 flex-nowrap whitespace-nowrap">
         <span class="font-mono font-black text-slate-900 text-sm whitespace-nowrap shrink-0">${curr}${order.pricing.grandTotal.toFixed(2)}</span>
         <div class="flex items-center gap-1.5 shrink-0 flex-nowrap whitespace-nowrap">
+          <button onclick="openEditReceiptModal('${order.id}')" class="px-2 py-1 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-thermal font-bold text-xs flex items-center gap-1 transition whitespace-nowrap" title="Edit Receipt">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit
+          </button>
           <button onclick="directPrintReceipt('${order.id}')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-black text-white font-thermal font-bold text-xs flex items-center gap-1 shadow-xs transition whitespace-nowrap" title="Direct Print Receipt">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
           </button>
@@ -1950,6 +2287,9 @@ function enterCustomerVerificationMode(order, requestedId) {
   window.switchTab = () => false;
   window.openSettingsModal = () => false;
   window.closeReceiptModal = () => false;
+  window.openEditReceiptModal = () => false;
+  window.handleEditCurrentReceipt = () => false;
+  window.handleSaveEditedReceipt = () => false;
   window.resetSaleForm = () => false;
   window.wipeAndResetAllData = () => false;
 
