@@ -140,6 +140,28 @@ body.admin-locked main {
   font-family: var(--font-aptos) !important;
 }
 
+/* Item identifier details (IMEI1, IMEI2, S/N, SKU) strictly left-aligned */
+.item-detail-row {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+.item-detail-row .item-detail-label {
+  display: inline-block !important;
+  width: 60px !important;
+  min-width: 60px !important;
+  flex-shrink: 0 !important;
+  text-align: left !important;
+}
+
+.item-detail-row .item-detail-value {
+  text-align: left !important;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -288,11 +310,26 @@ body.admin-locked main {
     object-fit: contain !important;
   }
 
-  /* Identifier Details Print Formatting (IMEI1, IMEI2, S/N, SKU enlarged & bold) */
+  /* Identifier Details Print Formatting (IMEI1, IMEI2, S/N, SKU enlarged & bold strictly left-aligned) */
   #receipt-items-container .item-detail-row {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
     font-size: 14.5px !important;
     font-weight: 800 !important;
     line-height: 1.25 !important;
+  }
+
+  #receipt-items-container .item-detail-row .item-detail-label {
+    display: inline-block !important;
+    width: 60px !important;
+    min-width: 60px !important;
+    flex-shrink: 0 !important;
+    text-align: left !important;
+  }
+
+  #receipt-items-container .item-detail-row .item-detail-value {
+    text-align: left !important;
   }
 
   /* QR Code Print Formatting - Exactly ONE single 112px x 112px square, never doubled or stretched */

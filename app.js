@@ -899,10 +899,10 @@ function openReceiptModal(order, isViaQR = false) {
           itemBlock.className = 'space-y-0.5 leading-tight';
 
           let detailsHtml = '';
-          if (item.imei1) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI1:</span><span class="font-black ml-2 font-mono tracking-wide">${escapeHTML(item.imei1)}</span></div>`;
-          if (item.imei2) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI2:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.imei2)}</span></div>`;
-          if (item.sn) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">S/N:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sn)}</span></div>`;
-          if (item.sku) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">SKU:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sku)}</span></div>`;
+          if (item.imei1) detailsHtml += `<div class="item-detail-row flex justify-start items-center text-[14px] sm:text-[15px] font-black"><span class="item-detail-label text-black font-black w-16 shrink-0">IMEI1:</span><span class="item-detail-value font-black font-mono tracking-wide ml-2">${escapeHTML(item.imei1)}</span></div>`;
+          if (item.imei2) detailsHtml += `<div class="item-detail-row flex justify-start items-center text-[14px] sm:text-[15px] font-black"><span class="item-detail-label text-black font-black w-16 shrink-0">IMEI2:</span><span class="item-detail-value font-bold font-mono tracking-wide ml-2">${escapeHTML(item.imei2)}</span></div>`;
+          if (item.sn) detailsHtml += `<div class="item-detail-row flex justify-start items-center text-[14px] sm:text-[15px] font-black"><span class="item-detail-label text-black font-black w-16 shrink-0">S/N:</span><span class="item-detail-value font-bold font-mono tracking-wide ml-2">${escapeHTML(item.sn)}</span></div>`;
+          if (item.sku) detailsHtml += `<div class="item-detail-row flex justify-start items-center text-[14px] sm:text-[15px] font-black"><span class="item-detail-label text-black font-black w-16 shrink-0">SKU:</span><span class="item-detail-value font-bold font-mono tracking-wide ml-2">${escapeHTML(item.sku)}</span></div>`;
 
           const priceNum = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
           const qtyNum = parseInt(item.qty, 10) || 1;
