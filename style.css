@@ -213,14 +213,21 @@ body.verification-mode #receipt-qr-verify-banner {
     background: transparent !important;
   }
 
-  /* Logo Image in Print */
+  /* Logo Image in Print (Enlarged) */
   #printable-receipt-area img.logo-img,
   #printable-receipt-area img[alt*="Logo"] {
     display: block !important;
-    margin: 0 auto 2px auto !important;
-    width: 50px !important;
-    height: 50px !important;
+    margin: 0 auto 3px auto !important;
+    width: 68px !important;
+    height: 68px !important;
     object-fit: contain !important;
+  }
+
+  /* Identifier Details Print Formatting (IMEI1, IMEI2, S/N, SKU enlarged & bold) */
+  #receipt-items-container .item-detail-row {
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
   }
 
   /* QR Code Print Formatting - 30% larger (112px) with chunky modules for thermal paper */

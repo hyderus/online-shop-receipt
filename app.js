@@ -849,20 +849,20 @@ function openReceiptModal(order, isViaQR = false) {
     itemBlock.className = 'space-y-0.5 leading-tight';
 
     let detailsHtml = '';
-    if (item.imei1) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">IMEI1:</span><span class="font-bold ml-2">${escapeHTML(item.imei1)}</span></div>`;
-    if (item.imei2) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">IMEI2:</span><span class="font-bold ml-2">${escapeHTML(item.imei2)}</span></div>`;
-    if (item.sn) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">S/N:</span><span class="font-bold ml-2">${escapeHTML(item.sn)}</span></div>`;
-    if (item.sku) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">SKU:</span><span class="font-bold ml-2">${escapeHTML(item.sku)}</span></div>`;
+    if (item.imei1) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI1:</span><span class="font-black ml-2 font-mono tracking-wide">${escapeHTML(item.imei1)}</span></div>`;
+    if (item.imei2) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI2:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.imei2)}</span></div>`;
+    if (item.sn) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">S/N:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sn)}</span></div>`;
+    if (item.sku) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">SKU:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sku)}</span></div>`;
 
     itemBlock.innerHTML = `
-      <div class="flex justify-between items-baseline font-black text-[14px] sm:text-[15px] leading-tight">
+      <div class="flex justify-between items-baseline font-black text-[15px] sm:text-[16px] leading-tight">
         <div class="min-w-0 pr-1">
           <span>${escapeHTML(item.name)}</span>
           <span class="text-xs font-bold text-black ml-1">(x${item.qty})</span>
         </div>
         <span class="shrink-0 whitespace-nowrap ml-2">${curr}${item.price.toFixed(2)}</span>
       </div>
-      ${detailsHtml ? `<div class="text-[12.5px] sm:text-xs pl-1 font-mono font-bold space-y-0 leading-tight">${detailsHtml}</div>` : ''}
+      ${detailsHtml ? `<div class="text-[14px] sm:text-[15px] pl-1 font-mono font-bold space-y-0.5 leading-tight">${detailsHtml}</div>` : ''}
     `;
     itemsContainer.appendChild(itemBlock);
   });
