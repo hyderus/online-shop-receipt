@@ -88,7 +88,7 @@
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="style.css?v=4.0" />
+  <link rel="stylesheet" href="style.css?v=4.1" />
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased selection:bg-slate-900 selection:text-white">
 
@@ -1053,10 +1053,10 @@
           <div class="divider-double my-1"></div>
         </div>
 
-        <!-- Dynamic Scannable QR Code Block (Cleaned up: No Token, No download button clutter, Border Removed) -->
+        <!-- Dynamic Scannable QR Code Block (Cleaned up: No Token, No download button clutter, Single Square) -->
         <div class="py-1 text-center space-y-0.5 border-b border-black">
           <p class="text-[11px] font-black uppercase tracking-wider text-black leading-none">SCAN TO VERIFY DIGITAL RECEIPT</p>
-          <div id="receipt-qrcode-canvas" class="inline-block p-0 bg-transparent my-0.5"></div>
+          <div id="receipt-qrcode-canvas" class="block mx-auto p-0 bg-transparent my-0.5 w-[112px] h-[112px] max-w-[112px] max-h-[112px] overflow-hidden leading-none"></div>
         </div>
 
         <!-- Warranty Policy & Closing -->
@@ -1220,6 +1220,6 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Application Logic -->
-  <script src="app.js?v=4.0"></script>
+  <script src="app.js?v=4.1"></script>
 </body>
 </html>

@@ -1010,42 +1010,52 @@ function generateReceiptQRCode(order) {
         correctLevel: QRCode.CorrectLevel.L
       });
 
-      // Mobile sync check: Ensure either canvas or img is visible and crisp without double-rendering
-      const syncDisplay = () => {
+      // Deduplicate elements immediately so ONLY ONE element exists in DOM (prevents double-rendering / vertical stretching in print)
+      const deduplicateQR = () => {
         const canvas = qrContainer.querySelector('canvas');
         const img = qrContainer.querySelector('img');
 
         // Check if img has valid base64 data URL
-        const hasValidImg = img && img.src && img.src.length > 50 && !img.src.endsWith('data:,');
+        const hasValidImg = img && img.src && img.src.startsWith('data:image') && img.src.length > 50;
 
         if (hasValidImg) {
+          // Remove the canvas element completely from DOM so it can NEVER double-print or stretch!
+          if (canvas) canvas.remove();
           img.style.display = 'block';
           img.style.width = '112px';
           img.style.height = '112px';
           img.style.margin = '0 auto';
-          if (canvas) canvas.style.display = 'none';
         } else if (canvas) {
-          // If img didn't generate or failed on mobile, force canvas to show!
+          // If img not populated yet, try converting canvas data URL
+          try {
+            const dataUrl = canvas.toDataURL('image/png');
+            if (dataUrl && dataUrl.startsWith('data:image') && dataUrl.length > 50) {
+              if (img) {
+                img.src = dataUrl;
+                if (canvas) canvas.remove(); // Keep ONLY img
+                img.style.display = 'block';
+                img.style.width = '112px';
+                img.style.height = '112px';
+                img.style.margin = '0 auto';
+                return;
+              }
+            }
+          } catch (e) {}
+
+          // Fallback: If canvas cannot be converted, remove img so only canvas exists
+          if (img) img.remove();
           canvas.style.display = 'block';
           canvas.style.width = '112px';
           canvas.style.height = '112px';
           canvas.style.margin = '0 auto';
-          if (img) img.style.display = 'none';
-
-          // Try converting canvas to image in case user wants to save/download
-          try {
-            if (img && (!img.src || img.src.length <= 50)) {
-              img.src = canvas.toDataURL('image/png');
-            }
-          } catch (e) {}
         }
       };
 
-      // Check immediately, next frame, and at 80ms / 250ms for mobile WebKit
-      syncDisplay();
-      requestAnimationFrame(syncDisplay);
-      setTimeout(syncDisplay, 80);
-      setTimeout(syncDisplay, 250);
+      // Check immediately, next frame, and at 30ms / 100ms
+      deduplicateQR();
+      requestAnimationFrame(deduplicateQR);
+      setTimeout(deduplicateQR, 30);
+      setTimeout(deduplicateQR, 100);
     } else {
       throw new Error('QRCode not loaded');
     }
