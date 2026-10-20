@@ -3,12 +3,12 @@
  * Official Store Portal for SWAPEE (4 South Clerk Street, Edinburgh EH8 9JE, UK)
  */
 
-// Application Storage Keys (v6: Clean fresh seed, wiping legacy cached formats)
-const STORAGE_KEY_ORDERS = 'swapee_orders_v6';
-const STORAGE_KEY_SETTINGS = 'swapee_settings_v6';
+// Application Storage Keys (v7: Clean compact format, reduced spacing, sharp QR)
+const STORAGE_KEY_ORDERS = 'swapee_orders_v7';
+const STORAGE_KEY_SETTINGS = 'swapee_settings_v7';
 
 // Automatically wipe previous cached versions to ensure clean fresh data
-['shopreceipt_orders_v1', 'shopreceipt_settings_v1', 'swapee_orders_v2', 'swapee_settings_v2', 'swapee_orders_v3', 'swapee_settings_v3', 'swapee_orders_v4', 'swapee_settings_v4', 'swapee_orders_v5', 'swapee_settings_v5'].forEach(k => {
+['shopreceipt_orders_v1', 'shopreceipt_settings_v1', 'swapee_orders_v2', 'swapee_settings_v2', 'swapee_orders_v3', 'swapee_settings_v3', 'swapee_orders_v4', 'swapee_settings_v4', 'swapee_orders_v5', 'swapee_settings_v5', 'swapee_orders_v6', 'swapee_settings_v6'].forEach(k => {
   try { localStorage.removeItem(k); } catch (e) {}
 });
 
@@ -122,7 +122,7 @@ function getInitialSampleOrders() {
       },
       items: [
         {
-          name: 'Pixel 7a Charcoal 128GB (Unlocked)',
+          name: 'Pixel 7A CHARC 128 GB',
           qty: 1,
           price: 312.88,
           total: 312.88,
@@ -834,23 +834,23 @@ function openReceiptModal(order) {
 
   order.items.forEach(item => {
     const itemBlock = document.createElement('div');
-    itemBlock.className = 'space-y-1';
+    itemBlock.className = 'space-y-0.5 leading-tight';
 
     let detailsHtml = '';
-    if (item.imei1) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">IMEI1:</span><span class="font-bold">${escapeHTML(item.imei1)}</span></div>`;
-    if (item.imei2) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">IMEI2:</span><span class="font-bold">${escapeHTML(item.imei2)}</span></div>`;
-    if (item.sn) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">S/N:</span><span class="font-bold">${escapeHTML(item.sn)}</span></div>`;
-    if (item.sku) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">SKU:</span><span class="font-bold">${escapeHTML(item.sku)}</span></div>`;
+    if (item.imei1) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">IMEI1:</span><span class="font-bold ml-2">${escapeHTML(item.imei1)}</span></div>`;
+    if (item.imei2) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">IMEI2:</span><span class="font-bold ml-2">${escapeHTML(item.imei2)}</span></div>`;
+    if (item.sn) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">S/N:</span><span class="font-bold ml-2">${escapeHTML(item.sn)}</span></div>`;
+    if (item.sku) detailsHtml += `<div class="flex justify-between items-center"><span class="text-black font-bold">SKU:</span><span class="font-bold ml-2">${escapeHTML(item.sku)}</span></div>`;
 
     itemBlock.innerHTML = `
-      <div class="flex justify-between items-baseline font-black text-sm sm:text-base">
-        <div class="flex items-baseline gap-1.5 min-w-0 pr-2">
+      <div class="flex justify-between items-baseline font-black text-[14px] sm:text-[15px] leading-tight">
+        <div class="min-w-0 pr-1">
           <span>${escapeHTML(item.name)}</span>
-          <span class="text-xs font-bold text-black shrink-0">(x${item.qty})</span>
+          <span class="text-xs font-bold text-black ml-1">(x${item.qty})</span>
         </div>
         <span class="shrink-0 whitespace-nowrap ml-2">${curr}${item.price.toFixed(2)}</span>
       </div>
-      ${detailsHtml ? `<div class="text-xs pl-2 font-mono font-bold space-y-0.5">${detailsHtml}</div>` : ''}
+      ${detailsHtml ? `<div class="text-[12.5px] sm:text-xs pl-1 font-mono font-bold space-y-0 leading-tight">${detailsHtml}</div>` : ''}
     `;
     itemsContainer.appendChild(itemBlock);
   });
@@ -951,10 +951,11 @@ function generateReceiptQRCode(order) {
   const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
 
   try {
+    // Generate at 320x320 high resolution for crisp, sharp thermal output
     new QRCode(qrContainer, {
       text: receiptUrl,
-      width: 135,
-      height: 135,
+      width: 320,
+      height: 320,
       colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M

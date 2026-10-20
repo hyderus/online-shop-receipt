@@ -52,7 +52,7 @@
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=3.3" />
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased selection:bg-slate-900 selection:text-white">
 
@@ -748,34 +748,34 @@
         </div>
       </div>
 
-      <!-- Printable Thermal Paper Style Receipt (Larger Text, High Contrast for Direct Printing) -->
-      <div id="printable-receipt-area" class="p-6 sm:p-8 bg-white text-black font-thermal text-[13px] sm:text-[14px] leading-relaxed max-w-[400px] mx-auto font-semibold">
+      <!-- Printable Thermal Paper Style Receipt (Reduced Spacing by 90%, Larger High-Contrast Typography) -->
+      <div id="printable-receipt-area" class="p-3 sm:p-5 bg-white text-black font-thermal text-[14px] sm:text-[15px] leading-tight max-w-[380px] mx-auto font-bold">
         
         <!-- Center Vector Logo & Header -->
-        <div class="text-center space-y-1.5 pb-2">
+        <div class="text-center space-y-0.5 pb-1">
           <!-- Vector Logo -->
-          <div class="w-20 h-20 mx-auto mb-2 rounded-full overflow-hidden bg-black p-0.5">
-            <img src="logo.svg" alt="SWAPEE Logo" class="w-full h-full object-contain" />
+          <div class="w-14 h-14 mx-auto mb-1 rounded-full overflow-hidden bg-black p-0.5">
+            <img src="logo.svg" alt="SWAPEE Logo" class="w-full h-full object-contain logo-img" />
           </div>
 
-          <h2 class="text-2xl sm:text-3xl font-black tracking-widest uppercase">SWAPEE</h2>
-          <p class="text-xs sm:text-sm font-black tracking-[0.35em] uppercase">S I N C E &nbsp; 2 0 0 2</p>
+          <h2 class="text-2xl sm:text-3xl font-black tracking-widest uppercase leading-none">SWAPEE</h2>
+          <p class="text-xs sm:text-sm font-black tracking-[0.3em] uppercase pt-0.5">S I N C E &nbsp; 2 0 0 2</p>
           
-          <div class="text-xs sm:text-[13px] font-bold pt-1 leading-snug">
+          <div class="text-xs sm:text-[13px] font-bold pt-0.5 leading-tight space-y-0">
             <p>4 South Clerk Street,</p>
             <p>Edinburgh EH8 9JE, UK</p>
-            <p class="pt-0.5">+44 131 662 9955</p>
-            <p class="pt-0.5">VAT No: GB 693 8235 95</p>
+            <p>+44 131 662 9955</p>
+            <p>VAT No: GB 693 8235 95</p>
             <p>Company No: SC175148</p>
           </div>
 
-          <div class="pt-3 text-sm sm:text-base font-black tracking-wider uppercase">
+          <div class="pt-1 text-sm sm:text-base font-black tracking-wider uppercase leading-none">
             -INVOICE-
           </div>
         </div>
 
         <!-- Receipt Metadata (RECIEPT, DATE, CASHIER strictly in one line) -->
-        <div class="py-2.5 text-xs sm:text-sm space-y-1 border-t-2 border-black font-bold">
+        <div class="py-1 text-xs sm:text-sm space-y-0.5 border-t border-black font-bold leading-tight">
           <div class="flex justify-between items-center whitespace-nowrap">
             <span>RECIEPT:</span>
             <span id="receipt-view-id" class="font-black ml-2">UC664413</span>
@@ -791,8 +791,8 @@
         </div>
 
         <!-- Customer Section (-CUSTOMER- strictly in one line) -->
-        <div class="border-t-2 border-black py-2.5 text-xs sm:text-sm space-y-1 font-bold">
-          <p class="text-center font-black tracking-wider uppercase mb-1">-CUSTOMER-</p>
+        <div class="border-t border-black py-1 text-xs sm:text-sm space-y-0.5 font-bold leading-tight">
+          <p class="text-center font-black tracking-wider uppercase mb-0.5">-CUSTOMER-</p>
           <div class="flex justify-between items-center whitespace-nowrap">
             <span>CUSTOMER NO:</span>
             <span id="receipt-cust-no" class="font-mono font-black ml-2">758D56-3</span>
@@ -808,17 +808,17 @@
         </div>
 
         <!-- Items Section (*ITEMS*) -->
-        <div class="border-t-2 border-black py-2.5 text-xs sm:text-sm font-bold">
-          <p class="text-center font-black tracking-wider uppercase mb-2.5">*ITEMS*</p>
+        <div class="border-t border-black py-1 text-xs sm:text-sm font-bold leading-tight">
+          <p class="text-center font-black tracking-wider uppercase mb-1">*ITEMS*</p>
           
-          <div id="receipt-items-container" class="space-y-3.5">
+          <div id="receipt-items-container" class="space-y-1.5">
             <!-- Rendered line items with IMEI / Serial numbers -->
           </div>
         </div>
 
         <!-- Calculations & Totals (Dotted divider) -->
-        <div class="border-t-2 border-black pt-2.5 text-xs sm:text-sm space-y-1.5 font-bold">
-          <div class="divider-asterisk text-center text-xs font-black text-black pb-1">
+        <div class="border-t border-black pt-1 text-xs sm:text-sm space-y-0.5 font-bold leading-tight">
+          <div class="divider-asterisk text-center text-xs font-black text-black py-0.5">
             ****************************************
           </div>
           
@@ -838,19 +838,19 @@
           </div>
 
           <!-- Total with double line -->
-          <div class="border-t-2 border-black pt-1.5 mt-1.5">
+          <div class="border-t-2 border-black pt-1 mt-1">
             <div class="flex justify-between text-base sm:text-xl font-black">
               <span>TOTAL</span>
               <span id="receipt-grand-total">£384.94</span>
             </div>
           </div>
-          <div class="divider-double my-1.5"></div>
+          <div class="divider-double my-1"></div>
         </div>
 
         <!-- Transaction Section (*TRANSACTION*) -->
-        <div class="py-2.5 text-xs sm:text-sm space-y-1 font-bold">
-          <p class="text-center font-black tracking-wider uppercase">*TRANSACTION*</p>
-          <div class="divider-asterisk text-center text-xs font-black text-black pb-1">
+        <div class="py-1 text-xs sm:text-sm space-y-0.5 font-bold leading-tight">
+          <p class="text-center font-black tracking-wider uppercase mb-0.5">*TRANSACTION*</p>
+          <div class="divider-asterisk text-center text-xs font-black text-black pb-0.5">
             ****************************************
           </div>
 
@@ -874,23 +874,23 @@
             <span>AID:</span>
             <span id="receipt-trans-aid" class="font-mono font-black">A000004123645</span>
           </div>
-          <div class="divider-double my-1.5"></div>
+          <div class="divider-double my-1"></div>
         </div>
 
         <!-- Dynamic Scannable QR Code Block (Cleaned up: No Token, No download button clutter) -->
-        <div class="py-3.5 text-center space-y-2 border-b-2 border-black">
-          <p class="text-xs font-black uppercase tracking-wider text-black">SCAN TO VERIFY DIGITAL RECEIPT</p>
-          <div id="receipt-qrcode-canvas" class="inline-block p-2 bg-white border border-black rounded shadow-xs"></div>
+        <div class="py-1 text-center space-y-0.5 border-b border-black">
+          <p class="text-[11px] font-black uppercase tracking-wider text-black leading-none">SCAN TO VERIFY DIGITAL RECEIPT</p>
+          <div id="receipt-qrcode-canvas" class="inline-block p-1 bg-white border border-black rounded shadow-xs my-0.5"></div>
         </div>
 
         <!-- Warranty Policy & Closing -->
-        <div class="pt-3.5 text-center text-xs sm:text-[13px] space-y-2.5 font-bold">
-          <p class="font-black tracking-wider uppercase">-WARRANTY POLICY-</p>
-          <p id="receipt-warranty-text" class="leading-relaxed">
+        <div class="pt-1 text-center text-[11px] sm:text-xs space-y-1 font-bold leading-tight">
+          <p class="font-black tracking-wider uppercase mb-0.5">-WARRANTY POLICY-</p>
+          <p id="receipt-warranty-text" class="leading-tight">
             For electronics and mobile warranty issues past the return period, call +44 131 662 9955.
           </p>
           
-          <div class="pt-2 font-black text-xs sm:text-sm space-y-1">
+          <div class="pt-1 font-black text-xs space-y-0.5">
             <p>Thank you for choosing us!</p>
             <p>We truly value your support.</p>
           </div>
@@ -1025,6 +1025,6 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Application Logic -->
-  <script src="app.js?v=3.2"></script>
+  <script src="app.js?v=3.3"></script>
 </body>
 </html>

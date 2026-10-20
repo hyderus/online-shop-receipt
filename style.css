@@ -13,6 +13,29 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
+/* Receipt QR Code styling - Enforce 1:1 square, prevent duplicate canvas stacking */
+#receipt-qrcode-canvas {
+  display: inline-block;
+  padding: 3px;
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 4px;
+}
+
+#receipt-qrcode-canvas canvas {
+  display: none !important;
+}
+
+#receipt-qrcode-canvas img {
+  display: block !important;
+  margin: 0 auto !important;
+  width: 170px !important;
+  height: 170px !important;
+  aspect-ratio: 1 / 1 !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: pixelated !important;
+}
+
 /* Thermal receipt paper mode font */
 .font-thermal {
   font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
@@ -137,15 +160,16 @@
     position: static !important;
     box-shadow: none !important;
     border: none !important;
-    padding: 2mm 3mm 8mm 3mm !important;
+    padding: 1mm 1.5mm 3mm 1.5mm !important;
     margin: 0 auto !important;
     width: 100% !important;
-    max-width: 80mm !important;
+    max-width: 78mm !important;
     background: #ffffff !important;
     color: #000000 !important;
     font-family: 'JetBrains Mono', 'Courier New', Courier, monospace !important;
-    font-size: 13px !important;
-    line-height: 1.4 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    line-height: 1.18 !important;
   }
 
   #printable-receipt-area * {
@@ -154,16 +178,41 @@
     background: transparent !important;
   }
 
-  #printable-receipt-area img,
-  #printable-receipt-area canvas {
+  /* Logo Image in Print */
+  #printable-receipt-area img.logo-img,
+  #printable-receipt-area img[alt*="Logo"] {
+    display: block !important;
+    margin: 0 auto 2px auto !important;
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: contain !important;
+  }
+
+  /* QR Code Print Formatting - Enforce single crisp square, hide duplicate canvas */
+  #receipt-qrcode-canvas {
+    display: inline-block !important;
+    padding: 2px !important;
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+    margin: 1px auto !important;
+  }
+
+  #receipt-qrcode-canvas canvas {
+    display: none !important;
+  }
+
+  #receipt-qrcode-canvas img {
     display: block !important;
     margin: 0 auto !important;
+    width: 170px !important;
+    height: 170px !important;
+    aspect-ratio: 1 / 1 !important;
+    image-rendering: -webkit-optimize-contrast !important;
     image-rendering: pixelated !important;
-    max-width: 100% !important;
   }
 
   @page {
     size: 80mm auto;
-    margin: 3mm;
+    margin: 1.5mm 1mm;
   }
 }
