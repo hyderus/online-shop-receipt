@@ -43,8 +43,13 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- QR Code Generator CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- QR Code Generator: Local bundled script with CDN fallback -->
+  <script src="qrcode.min.js"></script>
+  <script>
+    if (typeof QRCode === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>');
+    }
+  </script>
   
   <!-- HTML5 QR Code Scanner CDN -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -52,7 +57,7 @@
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="style.css?v=3.7" />
+  <link rel="stylesheet" href="style.css?v=3.8" />
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased selection:bg-slate-900 selection:text-white">
 
@@ -791,22 +796,30 @@
   </div>
 
   <!-- ============================================== -->
+  <!-- FLOATING VERIFIED AUTHENTIC POPUP TOAST       -->
+  <!-- Shown when customer views/scans QR code       -->
+  <!-- ============================================== -->
+  <div id="verified-authentic-toast" class="hidden fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-md bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white px-4 py-3 sm:py-3.5 rounded-2xl shadow-2xl border border-emerald-400/40 backdrop-blur-md flex items-center justify-between gap-3 animate-in slide-in-from-top-4 fade-in duration-300 no-print">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-emerald-600 flex items-center justify-center font-black shrink-0 shadow-sm ring-2 ring-emerald-300">
+        <i data-lucide="shield-check" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+      </div>
+      <div class="text-left min-w-0">
+        <p class="text-xs sm:text-sm font-black tracking-wide leading-tight uppercase drop-shadow-xs truncate">This is an authentic invoice!</p>
+        <p class="text-[11px] sm:text-xs font-semibold text-emerald-100 leading-tight">SWAPEE Official Verified Digital Seal</p>
+      </div>
+    </div>
+    <button type="button" onclick="dismissVerifiedToast()" class="p-1.5 rounded-lg text-emerald-100 hover:text-white hover:bg-white/20 transition shrink-0" title="Dismiss">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+  </div>
+
+  <!-- ============================================== -->
   <!-- MODAL: SWAPEE VIRTUAL RECEIPT (AUTHENTIC FORMAT)-->
   <!-- ============================================== -->
   <div id="receipt-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
     
     <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden my-auto border border-slate-300 animate-in fade-in zoom-in-95 duration-200">
-      
-      <!-- GREEN AUTHENTIC POPUP BANNER (Shown ONLY when viewing via QR code) -->
-      <div id="receipt-qr-verify-banner" class="hidden no-print bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3.5 flex items-center justify-center gap-2.5 shadow-md">
-        <div class="w-7 h-7 rounded-full bg-white text-emerald-600 flex items-center justify-center font-black shrink-0 shadow-sm">
-          <i data-lucide="shield-check" class="w-4 h-4"></i>
-        </div>
-        <div class="text-center">
-          <h3 class="font-black text-sm sm:text-base tracking-wide leading-tight">This is an authentic invoice!</h3>
-          <p class="text-[10px] font-bold text-emerald-100 uppercase tracking-widest">SWAPEE Official Verified Digital Seal</p>
-        </div>
-      </div>
 
       <!-- Top Action Bar (hidden in print, and REMOVED when viewing via QR code) -->
       <div id="receipt-modal-actions-bar" class="no-print bg-slate-950 text-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 border-b border-slate-800 flex-nowrap overflow-x-auto whitespace-nowrap">
@@ -962,10 +975,10 @@
           <div class="divider-double my-1"></div>
         </div>
 
-        <!-- Dynamic Scannable QR Code Block (Cleaned up: No Token, No download button clutter) -->
+        <!-- Dynamic Scannable QR Code Block (Cleaned up: No Token, No download button clutter, Border Removed) -->
         <div class="py-1 text-center space-y-0.5 border-b border-black">
           <p class="text-[11px] font-black uppercase tracking-wider text-black leading-none">SCAN TO VERIFY DIGITAL RECEIPT</p>
-          <div id="receipt-qrcode-canvas" class="inline-block p-1 bg-white border border-black rounded shadow-xs my-0.5"></div>
+          <div id="receipt-qrcode-canvas" class="inline-block p-0 bg-transparent my-0.5"></div>
         </div>
 
         <!-- Warranty Policy & Closing -->
@@ -1110,6 +1123,6 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Application Logic -->
-  <script src="app.js?v=3.7"></script>
+  <script src="app.js?v=3.8"></script>
 </body>
 </html>

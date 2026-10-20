@@ -24,34 +24,36 @@ body, html, input, select, textarea, button, .font-thermal, .receipt-paper, #pri
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
-/* Receipt QR Code styling - Increased by 30% to 112px, crisp 1:1 square */
+/* Receipt QR Code styling - Border removed, increased by 30% to 112px, mobile & desktop optimized */
 #receipt-qrcode-canvas {
   display: inline-block;
-  padding: 3px;
-  background: #ffffff;
-  border: 1px solid #000000;
-  border-radius: 4px;
+  padding: 0;
+  background: transparent;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
-#receipt-qrcode-canvas canvas {
-  display: none !important;
-}
-
+#receipt-qrcode-canvas canvas,
 #receipt-qrcode-canvas img {
-  display: block !important;
+  display: block;
   margin: 0 auto !important;
   width: 112px !important;
   height: 112px !important;
+  max-width: 112px !important;
+  max-height: 112px !important;
   aspect-ratio: 1 / 1 !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
   image-rendering: -webkit-optimize-contrast !important;
   image-rendering: pixelated !important;
 }
 
-/* Customer Verification Mode (Lockdown: Only Green Popup & Receipt visible, Actions Removed) */
+/* Customer Verification Mode (Lockdown: Only Green Floating Toast & Receipt visible, Actions Removed) */
 body.verification-mode header,
 body.verification-mode main,
 body.verification-mode #settings-modal,
-body.verification-mode #toast-container,
 body.verification-mode #customer-verification-portal {
   display: none !important;
 }
@@ -59,6 +61,7 @@ body.verification-mode #customer-verification-portal {
 body.verification-mode #receipt-modal {
   display: flex !important;
   background-color: rgba(2, 6, 23, 0.95) !important;
+  padding-top: 5.5rem !important;
 }
 
 /* Permanently remove the action options (Print, Save QR, WhatsApp, Link, Close) when viewing via QR code */
@@ -66,8 +69,8 @@ body.verification-mode #receipt-modal-actions-bar {
   display: none !important;
 }
 
-/* Permanently show the green authentic invoice popup banner when viewing via QR code */
-body.verification-mode #receipt-qr-verify-banner {
+/* Floating green authentic invoice popup toast in verification mode */
+body.verification-mode #verified-authentic-toast {
   display: flex !important;
 }
 
@@ -230,25 +233,27 @@ body.verification-mode #receipt-qr-verify-banner {
     line-height: 1.25 !important;
   }
 
-  /* QR Code Print Formatting - 30% larger (112px) with chunky modules for thermal paper */
+  /* QR Code Print Formatting - Border removed, 30% larger (112px) with chunky modules for thermal paper */
   #receipt-qrcode-canvas {
     display: inline-block !important;
-    padding: 2px !important;
-    background: #ffffff !important;
-    border: 1px solid #000000 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
     margin: 1px auto !important;
   }
 
-  #receipt-qrcode-canvas canvas {
-    display: none !important;
-  }
-
+  #receipt-qrcode-canvas canvas,
   #receipt-qrcode-canvas img {
     display: block !important;
     margin: 0 auto !important;
     width: 112px !important;
     height: 112px !important;
     aspect-ratio: 1 / 1 !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
     image-rendering: -webkit-optimize-contrast !important;
     image-rendering: pixelated !important;
   }

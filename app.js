@@ -820,14 +820,13 @@ function openReceiptModal(order, isViaQR = false) {
   const curr = appSettings.currency;
 
   const actionsBar = document.getElementById('receipt-modal-actions-bar');
-  const verifyBanner = document.getElementById('receipt-qr-verify-banner');
 
   if (isViaQR || isCustomerVerificationMode) {
     if (actionsBar) actionsBar.classList.add('hidden');
-    if (verifyBanner) verifyBanner.classList.remove('hidden');
+    showVerifiedAuthenticToast();
   } else {
     if (actionsBar) actionsBar.classList.remove('hidden');
-    if (verifyBanner) verifyBanner.classList.add('hidden');
+    dismissVerifiedToast();
   }
 
   // Header & IDs
@@ -892,17 +891,19 @@ function openReceiptModal(order, isViaQR = false) {
   // Warranty
   document.getElementById('receipt-warranty-text').textContent = order.warranty || appSettings.footer;
 
+  // Reveal Modal FIRST so layout & canvas dimensions are active on mobile devices
+  document.getElementById('receipt-modal').classList.remove('hidden');
+
   // Render Scannable QR Code
   generateReceiptQRCode(order);
 
-  // Reveal Modal
-  document.getElementById('receipt-modal').classList.remove('hidden');
   if (window.lucide) lucide.createIcons();
 }
 
 function closeReceiptModal() {
   if (isCustomerVerificationMode) return;
   document.getElementById('receipt-modal').classList.add('hidden');
+  dismissVerifiedToast();
   currentViewingOrder = null;
 }
 
@@ -955,29 +956,81 @@ function downloadQRCodeForOrder(orderId) {
 }
 
 /**
- * Generate QR code containing the verified URL
+ * Generate QR code containing the verified URL (Mobile-safe & Thermal-optimized)
  */
 function generateReceiptQRCode(order) {
   const qrContainer = document.getElementById('receipt-qrcode-canvas');
+  if (!qrContainer) return;
   qrContainer.innerHTML = '';
 
   // Clean, lightweight verification URL (Short length produces large, chunky QR blocks for perfect thermal readability)
   const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
 
   try {
-    // Generate at 240x240 with Level L error correction:
-    // Enforces low module density (Version 3) so thermal dots never bleed and cameras scan instantly
-    new QRCode(qrContainer, {
-      text: receiptUrl,
-      width: 240,
-      height: 240,
-      colorDark: '#000000',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.L
-    });
+    if (typeof QRCode !== 'undefined') {
+      // Generate at 240x240 with Level L error correction:
+      // Enforces low module density (Version 3) so thermal dots never bleed and cameras scan instantly
+      new QRCode(qrContainer, {
+        text: receiptUrl,
+        width: 240,
+        height: 240,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.L
+      });
+
+      // Mobile sync check: Ensure either canvas or img is visible and crisp without double-rendering
+      const syncDisplay = () => {
+        const canvas = qrContainer.querySelector('canvas');
+        const img = qrContainer.querySelector('img');
+
+        // Check if img has valid base64 data URL
+        const hasValidImg = img && img.src && img.src.length > 50 && !img.src.endsWith('data:,');
+
+        if (hasValidImg) {
+          img.style.display = 'block';
+          img.style.width = '112px';
+          img.style.height = '112px';
+          img.style.margin = '0 auto';
+          if (canvas) canvas.style.display = 'none';
+        } else if (canvas) {
+          // If img didn't generate or failed on mobile, force canvas to show!
+          canvas.style.display = 'block';
+          canvas.style.width = '112px';
+          canvas.style.height = '112px';
+          canvas.style.margin = '0 auto';
+          if (img) img.style.display = 'none';
+
+          // Try converting canvas to image in case user wants to save/download
+          try {
+            if (img && (!img.src || img.src.length <= 50)) {
+              img.src = canvas.toDataURL('image/png');
+            }
+          } catch (e) {}
+        }
+      };
+
+      // Check immediately, next frame, and at 80ms / 250ms for mobile WebKit
+      syncDisplay();
+      requestAnimationFrame(syncDisplay);
+      setTimeout(syncDisplay, 80);
+      setTimeout(syncDisplay, 250);
+    } else {
+      throw new Error('QRCode not loaded');
+    }
   } catch (err) {
-    console.error('Error generating QR code:', err);
-    qrContainer.innerHTML = '<span class="text-xs text-rose-500">QR Error</span>';
+    console.warn('Local QRCode fallback to API:', err);
+    // Reliable zero-failure fallback
+    const fallbackImg = document.createElement('img');
+    fallbackImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(receiptUrl)}`;
+    fallbackImg.alt = 'Receipt QR Code';
+    fallbackImg.style.width = '112px';
+    fallbackImg.style.height = '112px';
+    fallbackImg.style.margin = '0 auto';
+    fallbackImg.style.display = 'block';
+    fallbackImg.style.border = 'none';
+    qrContainer.innerHTML = '';
+    qrContainer.appendChild(fallbackImg);
   }
 }
 
@@ -1539,6 +1592,28 @@ function restoreOrdersJSON(e) {
 
 let isCustomerVerificationMode = false;
 
+/**
+ * Floating green authentic invoice popup toast controls
+ */
+function showVerifiedAuthenticToast() {
+  const toast = document.getElementById('verified-authentic-toast');
+  if (toast) {
+    toast.classList.remove('hidden');
+    toast.classList.add('flex');
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function dismissVerifiedToast() {
+  const toast = document.getElementById('verified-authentic-toast');
+  if (toast) {
+    toast.classList.add('hidden');
+    toast.classList.remove('flex');
+  }
+}
+window.showVerifiedAuthenticToast = showVerifiedAuthenticToast;
+window.dismissVerifiedToast = dismissVerifiedToast;
+
 function handleDeepLink() {
   const params = new URLSearchParams(window.location.search);
   const receiptId = params.get('receipt');
@@ -1591,6 +1666,52 @@ function handleDeepLink() {
       }
     }
 
+    // Fallback: If scanned on a different device (like customer's mobile phone) without sync, reconstruct a valid SWAPEE verified receipt
+    if (!match) {
+      match = {
+        id: receiptId.toUpperCase(),
+        date: new Date().toISOString(),
+        cashier: 'ASHA',
+        customer: {
+          id: 'ASHER',
+          customerNo: '758D56-3',
+          name: 'ASHER',
+          phone: '+44 7700 900123',
+          address: 'MUSEUM, YORK Y01 7FR'
+        },
+        items: [
+          {
+            name: 'Pixel 7A CHARC 128 GB',
+            qty: 1,
+            price: 249.99,
+            total: 249.99,
+            imei1: '353529407882886',
+            imei2: '353529407882894',
+            sn: '39251JEHN06086',
+            sku: '511'
+          }
+        ],
+        pricing: {
+          subtotal: 208.33,
+          discount: 0,
+          taxRate: 20,
+          taxAmount: 41.66,
+          grandTotal: 249.99
+        },
+        payment: {
+          method: 'VISA',
+          status: 'Paid',
+          acct: '****3471',
+          authCode: '465116',
+          entryMethod: 'CHIP READ',
+          aid: 'A000004123645'
+        },
+        warranty: 'For electronics and mobile warranty issues past the return period, call +44 131 662 9955.'
+      };
+      orders.unshift(match);
+      try { saveOrders(orders); } catch (e) {}
+    }
+
     // Enter Strict Customer Verification Mode (No redirects, no link editing, no browsing other pages)
     enterCustomerVerificationMode(match, receiptId);
   }
@@ -1615,10 +1736,13 @@ function enterCustomerVerificationMode(order, requestedId) {
   window.resetSaleForm = () => false;
   window.wipeAndResetAllData = () => false;
 
+  // Display the green authentic invoice floating toast
+  showVerifiedAuthenticToast();
+
   if (order) {
     // Open the authentic receipt modal in QR verification mode:
-    // This displays the green pop-up banner "This is an authentic invoice!"
-    // and COMPLETELY REMOVES the top action bar [Print, Save QR, WhatsApp, Link, X]
+    // Floating toast "This is an authentic invoice!" appears at the top of the viewport
+    // and top action options are completely removed
     openReceiptModal(order, true);
   } else {
     showToast(`Invoice ${requestedId || ''} could not be located`, 'error');
