@@ -24,10 +24,10 @@ body, html, input, select, textarea, button, .font-thermal, .receipt-paper, #pri
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
-/* Receipt QR Code styling - Reduced by 50% to 85px, crisp 1:1 square */
+/* Receipt QR Code styling - Increased by 30% to 112px, crisp 1:1 square */
 #receipt-qrcode-canvas {
   display: inline-block;
-  padding: 2px;
+  padding: 3px;
   background: #ffffff;
   border: 1px solid #000000;
   border-radius: 4px;
@@ -40,8 +40,8 @@ body, html, input, select, textarea, button, .font-thermal, .receipt-paper, #pri
 #receipt-qrcode-canvas img {
   display: block !important;
   margin: 0 auto !important;
-  width: 85px !important;
-  height: 85px !important;
+  width: 112px !important;
+  height: 112px !important;
   aspect-ratio: 1 / 1 !important;
   image-rendering: -webkit-optimize-contrast !important;
   image-rendering: pixelated !important;
@@ -223,7 +223,7 @@ body.verification-mode #receipt-qr-verify-banner {
     object-fit: contain !important;
   }
 
-  /* QR Code Print Formatting - 50% reduced size (85px), crisp single square */
+  /* QR Code Print Formatting - 30% larger (112px) with chunky modules for thermal paper */
   #receipt-qrcode-canvas {
     display: inline-block !important;
     padding: 2px !important;
@@ -239,8 +239,8 @@ body.verification-mode #receipt-qr-verify-banner {
   #receipt-qrcode-canvas img {
     display: block !important;
     margin: 0 auto !important;
-    width: 85px !important;
-    height: 85px !important;
+    width: 112px !important;
+    height: 112px !important;
     aspect-ratio: 1 / 1 !important;
     image-rendering: -webkit-optimize-contrast !important;
     image-rendering: pixelated !important;

@@ -934,7 +934,7 @@ function downloadQRCodeForOrder(orderId) {
     height: 260,
     colorDark: '#000000',
     colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
+    correctLevel: QRCode.CorrectLevel.M
   });
 
   setTimeout(() => {
@@ -961,32 +961,19 @@ function generateReceiptQRCode(order) {
   const qrContainer = document.getElementById('receipt-qrcode-canvas');
   qrContainer.innerHTML = '';
 
-  const compactPayload = {
-    id: order.id,
-    c: order.customer.name,
-    cn: order.customer.customerNo,
-    a: order.customer.address,
-    t: order.pricing.grandTotal,
-    dt: order.date,
-    ca: order.cashier,
-    itm: order.items.map(i => ({ n: i.name, q: i.qty, p: i.price, i1: i.imei1, i2: i.imei2, sn: i.sn, sku: i.sku }))
-  };
-  let dParam = '';
-  try {
-    dParam = '&d=' + encodeURIComponent(btoa(JSON.stringify(compactPayload)));
-  } catch (e) {}
-
-  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}${dParam}`;
+  // Clean, lightweight verification URL (Short length produces large, chunky QR blocks for perfect thermal readability)
+  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
 
   try {
-    // Generate at 220x220, scaled down by 50% via CSS (85px), sharp dot matrix
+    // Generate at 240x240 with Level L error correction:
+    // Enforces low module density (Version 3) so thermal dots never bleed and cameras scan instantly
     new QRCode(qrContainer, {
       text: receiptUrl,
-      width: 220,
-      height: 220,
+      width: 240,
+      height: 240,
       colorDark: '#000000',
       colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
+      correctLevel: QRCode.CorrectLevel.L
     });
   } catch (err) {
     console.error('Error generating QR code:', err);
