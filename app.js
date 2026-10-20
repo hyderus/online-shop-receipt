@@ -237,8 +237,66 @@ function switchTab(tabId) {
 }
 
 /* ==========================================================================
-   SALE FORM & ITEM BUILDER (IMEI, S/N, SKU)
+   SALE FORM & ITEM BUILDER (SELECTABLE IMEI1, IMEI2, SERIAL NO, SKU)
    ========================================================================== */
+
+// Catalog of quick selectable device presets
+const SWAPEE_INVENTORY_PRESETS = [
+  {
+    name: 'Pixel 7A CHARC 128 GB',
+    price: 312.88,
+    imei1: '353529407882886',
+    imei2: '353529407882894',
+    sn: '39251JEHN06086',
+    sku: '',
+    type: 'dual-imei'
+  },
+  {
+    name: 'iPhone 13 Midnight 128GB (Unlocked)',
+    price: 389.00,
+    imei1: '356891048291045',
+    imei2: '356891048291052',
+    sn: 'FFGX8910PLMQ',
+    sku: '',
+    type: 'dual-imei'
+  },
+  {
+    name: 'Samsung Galaxy S24 256GB Onyx Black',
+    price: 549.00,
+    imei1: '358921049182390',
+    imei2: '358921049182398',
+    sn: 'R58X901249A',
+    sku: '',
+    type: 'dual-imei'
+  },
+  {
+    name: 'MALVIK PRO 30W (511) USB-C Charger',
+    price: 27.90,
+    imei1: '',
+    imei2: '',
+    sn: '',
+    sku: 'A2419621',
+    type: 'accessory'
+  },
+  {
+    name: 'SWAPEE 9H Tempered Glass Screen Shield',
+    price: 14.99,
+    imei1: '',
+    imei2: '',
+    sn: '',
+    sku: 'SWP-GLS-9H',
+    type: 'accessory'
+  },
+  {
+    name: 'SWAPEE Ultra MagSafe Protective Case',
+    price: 19.99,
+    imei1: '',
+    imei2: '',
+    sn: '',
+    sku: 'CASE-MAG-CLR',
+    type: 'accessory'
+  }
+];
 
 function generateReceiptNumber() {
   const randomNum = Math.floor(100000 + Math.random() * 900000);
@@ -262,76 +320,199 @@ function resetSaleForm() {
 
   const itemsContainer = document.getElementById('product-items-list');
   itemsContainer.innerHTML = '';
-  addProductItemRow();
+  addProductItemRow('', 1, '', '', '', '', '', { imei1: true, imei2: true, sn: true, sku: false });
 
   calculateTotals();
   if (window.lucide) lucide.createIcons();
 }
 
-function addProductItemRow(name = '', qty = 1, price = '', sku = '', imei1 = '', imei2 = '', sn = '') {
+/**
+ * Adds a product line item row with SELECTABLE IMEI 1, IMEI 2, Serial Number (S/N), and SKU
+ */
+function addProductItemRow(
+  name = '',
+  qty = 1,
+  price = '',
+  sku = '',
+  imei1 = '',
+  imei2 = '',
+  sn = '',
+  activeFields = { imei1: true, imei2: true, sn: true, sku: true }
+) {
   const container = document.getElementById('product-items-list');
   const index = container.children.length;
+  const rowId = `item-row-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  const hasImei1 = activeFields.imei1 !== undefined ? activeFields.imei1 : !!imei1;
+  const hasImei2 = activeFields.imei2 !== undefined ? activeFields.imei2 : !!imei2;
+  const hasSn = activeFields.sn !== undefined ? activeFields.sn : !!sn;
+  const hasSku = activeFields.sku !== undefined ? activeFields.sku : !!sku;
 
   const row = document.createElement('div');
-  row.className = 'product-item-row p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3';
+  row.id = rowId;
+  row.className = 'product-item-row p-4 rounded-2xl border border-slate-300 bg-white shadow-sm space-y-3.5 transition duration-150';
+  
   row.innerHTML = `
-    <div class="flex items-center justify-between pb-1 border-b border-slate-200/60">
-      <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5 font-thermal">
-        <span class="w-5 h-5 rounded bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center">${index + 1}</span>
-        ITEM SPECIFICATION
-      </span>
-      ${index > 0 ? `
-        <button type="button" onclick="removeProductItemRow(this)" class="text-xs text-rose-600 hover:underline flex items-center gap-1 font-semibold">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove Item
-        </button>
-      ` : ''}
+    <!-- Row Header & Preset Device Picker -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-lg bg-slate-900 text-white text-xs font-bold font-mono flex items-center justify-center shrink-0">
+          ${index + 1}
+        </span>
+        <span class="text-xs font-black text-slate-900 tracking-wide font-thermal uppercase">
+          Product Item #${index + 1}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Quick Preset Device Dropdown -->
+        <select onchange="onPresetDeviceSelected(this)" class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs bg-slate-50 font-mono text-slate-700 hover:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900">
+          <option value="">⚡ Select Device / Stock Preset...</option>
+          ${SWAPEE_INVENTORY_PRESETS.map((p, idx) => `<option value="${idx}">${p.name} (£${p.price.toFixed(2)})</option>`).join('')}
+        </select>
+
+        ${index > 0 ? `
+          <button type="button" onclick="removeProductItemRow(this)" class="text-xs text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-2 py-1 rounded-lg flex items-center gap-1 font-semibold transition">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove
+          </button>
+        ` : ''}
+      </div>
     </div>
 
     <!-- Main Title, Qty, Price -->
     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
       <div class="sm:col-span-6">
-        <label class="block text-[11px] font-bold text-slate-700 mb-1">Item Title / Model Description <span class="text-rose-500">*</span></label>
+        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+          Item Description / Model Name <span class="text-rose-500">*</span>
+        </label>
         <input type="text" required placeholder="e.g. Pixel 7A CHARC 128 GB" value="${escapeHTML(name)}"
-          class="item-name w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white font-semibold uppercase" />
+          class="item-name w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 font-bold uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900" />
       </div>
 
       <div class="sm:col-span-3">
-        <label class="block text-[11px] font-bold text-slate-700 mb-1">Qty <span class="text-rose-500">*</span></label>
+        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+          Quantity <span class="text-rose-500">*</span>
+        </label>
         <input type="number" required min="1" step="1" value="${qty}" oninput="calculateTotals()"
-          class="item-qty w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white font-mono text-center" />
+          class="item-qty w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 font-mono text-center font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900" />
       </div>
 
       <div class="sm:col-span-3">
-        <label class="block text-[11px] font-bold text-slate-700 mb-1">Unit Price (${appSettings.currency}) <span class="text-rose-500">*</span></label>
+        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+          Unit Price (${appSettings.currency}) <span class="text-rose-500">*</span>
+        </label>
         <input type="number" required min="0" step="any" placeholder="0.00" value="${price}" oninput="calculateTotals()"
-          class="item-price w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white font-mono text-right font-bold" />
+          class="item-price w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 font-mono text-right font-black focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900" />
       </div>
     </div>
 
-    <!-- Mobile / Electronics Serial Numbers (IMEI 1, IMEI 2, S/N, SKU) -->
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1 bg-white p-2.5 rounded-lg border border-slate-200/80">
-      <div>
-        <label class="block text-[10px] font-mono text-slate-500 uppercase">IMEI 1 (Optional)</label>
-        <input type="text" placeholder="e.g. 353529407882886" value="${escapeHTML(imei1)}"
-          class="item-imei1 w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono" />
+    <!-- ============================================== -->
+    <!-- SELECTABLE FIELDS SELECTION CONTROL BAR        -->
+    <!-- ============================================== -->
+    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
+          <i data-lucide="check-square" class="w-3.5 h-3.5 text-slate-900"></i>
+          <span>Select Identifiers to Include on Receipt:</span>
+        </div>
+
+        <!-- 1-Click Template Selector Buttons -->
+        <div class="flex flex-wrap items-center gap-1 text-[10px] font-mono font-semibold">
+          <button type="button" onclick="applyPresetToRow(this, 'dual-imei')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">📱 Dual IMEI + S/N</button>
+          <button type="button" onclick="applyPresetToRow(this, 'single-imei')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">📱 1 IMEI + S/N</button>
+          <button type="button" onclick="applyPresetToRow(this, 'accessory')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">🔌 SKU Only</button>
+          <button type="button" onclick="applyPresetToRow(this, 'all')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">All 4</button>
+        </div>
       </div>
 
-      <div>
-        <label class="block text-[10px] font-mono text-slate-500 uppercase">IMEI 2 (Optional)</label>
-        <input type="text" placeholder="e.g. 353529407882894" value="${escapeHTML(imei2)}"
-          class="item-imei2 w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono" />
+      <!-- Selectable Checkboxes with Badges -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-200/60">
+        <!-- Selectable IMEI 1 -->
+        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasImei1 ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+          <input type="checkbox" class="toggle-imei1 rounded border-slate-300 text-slate-900 focus:ring-0" ${hasImei1 ? 'checked' : ''} onchange="toggleIdentifierField(this, 'imei1')">
+          <span class="text-xs font-mono">IMEI 1</span>
+        </label>
+
+        <!-- Selectable IMEI 2 -->
+        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasImei2 ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+          <input type="checkbox" class="toggle-imei2 rounded border-slate-300 text-slate-900 focus:ring-0" ${hasImei2 ? 'checked' : ''} onchange="toggleIdentifierField(this, 'imei2')">
+          <span class="text-xs font-mono">IMEI 2</span>
+        </label>
+
+        <!-- Selectable Serial Number (S/N) -->
+        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasSn ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+          <input type="checkbox" class="toggle-sn rounded border-slate-300 text-slate-900 focus:ring-0" ${hasSn ? 'checked' : ''} onchange="toggleIdentifierField(this, 'sn')">
+          <span class="text-xs font-mono">Serial (S/N)</span>
+        </label>
+
+        <!-- Selectable SKU -->
+        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasSku ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+          <input type="checkbox" class="toggle-sku rounded border-slate-300 text-slate-900 focus:ring-0" ${hasSku ? 'checked' : ''} onchange="toggleIdentifierField(this, 'sku')">
+          <span class="text-xs font-mono">SKU Code</span>
+        </label>
       </div>
 
-      <div>
-        <label class="block text-[10px] font-mono text-slate-500 uppercase">S/N (Serial No)</label>
-        <input type="text" placeholder="e.g. 39251JEHN06086" value="${escapeHTML(sn)}"
-          class="item-sn w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono uppercase" />
-      </div>
+      <!-- ============================================== -->
+      <!-- ACTIVE INPUT FIELDS CONTAINER                 -->
+      <!-- ============================================== -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2">
+        
+        <!-- Field 1: IMEI 1 -->
+        <div class="field-container-imei1 ${hasImei1 ? '' : 'hidden'} bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-bold font-mono text-slate-600 uppercase flex items-center gap-1">
+              <i data-lucide="smartphone" class="w-3 h-3 text-indigo-600"></i> IMEI 1
+            </span>
+            <button type="button" onclick="startFieldBarcodeScan(this, 'item-imei1')" class="text-[10px] text-slate-500 hover:text-black flex items-center gap-0.5" title="Scan Barcode from Box">
+              <i data-lucide="scan" class="w-3 h-3"></i> Scan
+            </button>
+          </div>
+          <input type="text" list="preset-imei1-options" placeholder="e.g. 353529407882886" value="${escapeHTML(imei1)}"
+            class="item-imei1 w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-slate-900" />
+        </div>
 
-      <div>
-        <label class="block text-[10px] font-mono text-slate-500 uppercase">SKU / Part Code</label>
-        <input type="text" placeholder="e.g. A2419621" value="${escapeHTML(sku)}"
-          class="item-sku w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono uppercase" />
+        <!-- Field 2: IMEI 2 -->
+        <div class="field-container-imei2 ${hasImei2 ? '' : 'hidden'} bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-bold font-mono text-slate-600 uppercase flex items-center gap-1">
+              <i data-lucide="smartphone" class="w-3 h-3 text-indigo-600"></i> IMEI 2 (eSIM)
+            </span>
+            <button type="button" onclick="startFieldBarcodeScan(this, 'item-imei2')" class="text-[10px] text-slate-500 hover:text-black flex items-center gap-0.5" title="Scan Barcode from Box">
+              <i data-lucide="scan" class="w-3 h-3"></i> Scan
+            </button>
+          </div>
+          <input type="text" list="preset-imei2-options" placeholder="e.g. 353529407882894" value="${escapeHTML(imei2)}"
+            class="item-imei2 w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-slate-900" />
+        </div>
+
+        <!-- Field 3: Serial Number (S/N) -->
+        <div class="field-container-sn ${hasSn ? '' : 'hidden'} bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-bold font-mono text-slate-600 uppercase flex items-center gap-1">
+              <i data-lucide="hash" class="w-3 h-3 text-indigo-600"></i> Serial (S/N)
+            </span>
+            <button type="button" onclick="startFieldBarcodeScan(this, 'item-sn')" class="text-[10px] text-slate-500 hover:text-black flex items-center gap-0.5" title="Scan Serial Barcode">
+              <i data-lucide="scan" class="w-3 h-3"></i> Scan
+            </button>
+          </div>
+          <input type="text" list="preset-sn-options" placeholder="e.g. 39251JEHN06086" value="${escapeHTML(sn)}"
+            class="item-sn w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-slate-900" />
+        </div>
+
+        <!-- Field 4: SKU -->
+        <div class="field-container-sku ${hasSku ? '' : 'hidden'} bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-bold font-mono text-slate-600 uppercase flex items-center gap-1">
+              <i data-lucide="tag" class="w-3 h-3 text-indigo-600"></i> SKU / Part #
+            </span>
+            <button type="button" onclick="startFieldBarcodeScan(this, 'item-sku')" class="text-[10px] text-slate-500 hover:text-black flex items-center gap-0.5" title="Scan SKU Barcode">
+              <i data-lucide="scan" class="w-3 h-3"></i> Scan
+            </button>
+          </div>
+          <input type="text" list="preset-sku-options" placeholder="e.g. A2419621" value="${escapeHTML(sku)}"
+            class="item-sku w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono uppercase bg-white focus:outline-none focus:ring-2 focus:ring-slate-900" />
+        </div>
+
       </div>
     </div>
   `;
@@ -341,13 +522,118 @@ function addProductItemRow(name = '', qty = 1, price = '', sku = '', imei1 = '',
   calculateTotals();
 }
 
+/**
+ * Toggles visibility of an identifier field when checkbox is clicked
+ */
+function toggleIdentifierField(checkbox, fieldKey) {
+  const row = checkbox.closest('.product-item-row');
+  const container = row.querySelector(`.field-container-${fieldKey}`);
+  const label = checkbox.closest('label');
+
+  if (checkbox.checked) {
+    container.classList.remove('hidden');
+    label.className = 'flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold';
+    const input = container.querySelector('input');
+    if (input) input.focus();
+  } else {
+    container.classList.add('hidden');
+    label.className = 'flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition bg-white border-slate-200 text-slate-500';
+  }
+}
+
+/**
+ * 1-Click Preset applier for a specific row
+ */
+function applyPresetToRow(btn, mode) {
+  const row = btn.closest('.product-item-row');
+  const chkImei1 = row.querySelector('.toggle-imei1');
+  const chkImei2 = row.querySelector('.toggle-imei2');
+  const chkSn = row.querySelector('.toggle-sn');
+  const chkSku = row.querySelector('.toggle-sku');
+
+  if (mode === 'dual-imei') {
+    chkImei1.checked = true;
+    chkImei2.checked = true;
+    chkSn.checked = true;
+    chkSku.checked = false;
+  } else if (mode === 'single-imei') {
+    chkImei1.checked = true;
+    chkImei2.checked = false;
+    chkSn.checked = true;
+    chkSku.checked = false;
+  } else if (mode === 'accessory') {
+    chkImei1.checked = false;
+    chkImei2.checked = false;
+    chkSn.checked = false;
+    chkSku.checked = true;
+  } else if (mode === 'all') {
+    chkImei1.checked = true;
+    chkImei2.checked = true;
+    chkSn.checked = true;
+    chkSku.checked = true;
+  }
+
+  [
+    { chk: chkImei1, key: 'imei1' },
+    { chk: chkImei2, key: 'imei2' },
+    { chk: chkSn, key: 'sn' },
+    { chk: chkSku, key: 'sku' }
+  ].forEach(item => toggleIdentifierField(item.chk, item.key));
+}
+
+/**
+ * Handles selection from the Quick Preset Device Dropdown
+ */
+function onPresetDeviceSelected(selectEl) {
+  const index = selectEl.value;
+  if (index === '') return;
+
+  const preset = SWAPEE_INVENTORY_PRESETS[index];
+  if (!preset) return;
+
+  const row = selectEl.closest('.product-item-row');
+  row.querySelector('.item-name').value = preset.name;
+  row.querySelector('.item-price').value = preset.price.toFixed(2);
+
+  // Set values
+  row.querySelector('.item-imei1').value = preset.imei1;
+  row.querySelector('.item-imei2').value = preset.imei2;
+  row.querySelector('.item-sn').value = preset.sn;
+  row.querySelector('.item-sku').value = preset.sku;
+
+  // Apply checkboxes
+  applyPresetToRow(selectEl, preset.type === 'accessory' ? 'accessory' : 'dual-imei');
+  calculateTotals();
+  showToast(`Pre-filled: ${preset.name}`, 'info');
+
+  // Reset selector back to prompt
+  selectEl.value = '';
+}
+
+/**
+ * Quick Barcode Scanner for individual IMEI/SKU field
+ */
+function startFieldBarcodeScan(btn, targetInputClass) {
+  const row = btn.closest('.product-item-row');
+  const input = row.querySelector(`.${targetInputClass}`);
+
+  // Switch to QR/Barcode tab with notification
+  switchTab('scan-qr');
+  showToast('Point camera at the barcode/IMEI to scan directly!', 'info');
+
+  // Store target input in memory for scanner
+  window.activeBarcodeTargetInput = input;
+}
+
 function removeProductItemRow(button) {
   const row = button.closest('.product-item-row');
   row.remove();
   const container = document.getElementById('product-items-list');
   Array.from(container.children).forEach((child, idx) => {
-    const badge = child.querySelector('.text-\\[11px\\]');
+    const badge = child.querySelector('.text-xs.font-bold.font-mono');
     if (badge) badge.textContent = idx + 1;
+    const title = child.querySelector('.text-xs.font-black');
+    if (title) title.textContent = `Product Item #${idx + 1}`;
   });
   calculateTotals();
 }
@@ -409,6 +695,7 @@ function loadSWAPEESampleReceipt() {
   const container = document.getElementById('product-items-list');
   container.innerHTML = '';
 
+  // Item 1: Pixel 7A with selectable IMEI 1, IMEI 2, and S/N active
   addProductItemRow(
     'Pixel 7A CHARC 128 GB',
     1,
@@ -416,9 +703,11 @@ function loadSWAPEESampleReceipt() {
     '',
     '353529407882886',
     '353529407882894',
-    '39251JEHN06086'
+    '39251JEHN06086',
+    { imei1: true, imei2: true, sn: true, sku: false }
   );
 
+  // Item 2: Malvik Charger with selectable SKU active
   addProductItemRow(
     'MALVIK PRO 30W (511)',
     1,
@@ -426,7 +715,8 @@ function loadSWAPEESampleReceipt() {
     'A2419621',
     '',
     '',
-    ''
+    '',
+    { imei1: false, imei2: false, sn: false, sku: true }
   );
 
   calculateTotals();
@@ -456,7 +746,7 @@ function handleCreateReceipt(e) {
   const aid = document.getElementById('trans-aid').value.trim();
   const warranty = document.getElementById('order-warranty').value.trim();
 
-  // Collect Product Line Items
+  // Collect Product Line Items with their SELECTABLE fields
   const itemRows = document.querySelectorAll('.product-item-row');
   const items = [];
 
@@ -464,10 +754,37 @@ function handleCreateReceipt(e) {
     const name = row.querySelector('.item-name')?.value.trim();
     const qty = parseInt(row.querySelector('.item-qty')?.value, 10) || 1;
     const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
-    const sku = row.querySelector('.item-sku')?.value.trim();
-    const imei1 = row.querySelector('.item-imei1')?.value.trim();
-    const imei2 = row.querySelector('.item-imei2')?.value.trim();
-    const sn = row.querySelector('.item-sn')?.value.trim();
+
+    // Check which fields the user selected to include
+    const useImei1 = row.querySelector('.toggle-imei1')?.checked;
+    const useImei2 = row.querySelector('.toggle-imei2')?.checked;
+    const useSn = row.querySelector('.toggle-sn')?.checked;
+    const useSku = row.querySelector('.toggle-sku')?.checked;
+
+    const imei1 = useImei1 ? (row.querySelector('.item-imei1')?.value.trim() || '') : '';
+    const imei2 = useImei2 ? (row.querySelector('.item-imei2')?.value.trim() || '') : '';
+    const sn = useSn ? (row.querySelector('.item-sn')?.value.trim() || '') : '';
+    const sku = useSku ? (row.querySelector('.item-sku')?.value.trim() || '') : '';
+
+    if (name) {
+      items.push({
+        name,
+        qty,
+        price,
+        total: qty * price,
+        sku,
+        imei1,
+        imei2,
+        sn,
+        selectedFields: {
+          imei1: useImei1,
+          imei2: useImei2,
+          sn: useSn,
+          sku: useSku
+        }
+      });
+    }
+  });
 
     if (name) {
       items.push({
@@ -768,6 +1085,16 @@ function stopQRScanner() {
 function onQRCodeScanSuccess(decodedText) {
   playSuccessBeep();
   stopQRScanner();
+
+  // If scanner was triggered for a specific IMEI/SKU field
+  if (window.activeBarcodeTargetInput) {
+    window.activeBarcodeTargetInput.value = decodedText.trim();
+    showToast(`Scanned into field: ${decodedText.trim()}`, 'success');
+    window.activeBarcodeTargetInput = null;
+    switchTab('new-sale');
+    return;
+  }
+
   processScannedPayload(decodedText);
 }
 
