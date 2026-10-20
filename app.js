@@ -3,9 +3,14 @@
  * Official Store Portal for SWAPEE (4 South Clerk Street, Edinburgh EH8 9JE, UK)
  */
 
-// Application Storage Keys
-const STORAGE_KEY_ORDERS = 'swapee_orders_v2';
-const STORAGE_KEY_SETTINGS = 'swapee_settings_v2';
+// Application Storage Keys (v6: Clean fresh seed, wiping legacy cached formats)
+const STORAGE_KEY_ORDERS = 'swapee_orders_v6';
+const STORAGE_KEY_SETTINGS = 'swapee_settings_v6';
+
+// Automatically wipe previous cached versions to ensure clean fresh data
+['shopreceipt_orders_v1', 'shopreceipt_settings_v1', 'swapee_orders_v2', 'swapee_settings_v2', 'swapee_orders_v3', 'swapee_settings_v3', 'swapee_orders_v4', 'swapee_settings_v4', 'swapee_orders_v5', 'swapee_settings_v5'].forEach(k => {
+  try { localStorage.removeItem(k); } catch (e) {}
+});
 
 // Official SWAPEE Configuration
 const defaultSettings = {
@@ -48,6 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
    STORAGE & DATA MANAGEMENT
    ========================================================================== */
 
+function wipeAndResetAllData() {
+  if (confirm('Are you sure you want to wipe all stored orders and reset to a clean SWAPEE database?')) {
+    localStorage.clear();
+    appSettings = { ...defaultSettings };
+    orders = getInitialSampleOrders();
+    saveSettings(appSettings);
+    saveOrders(orders);
+    showToast('Database wiped! Fresh SWAPEE system loaded.', 'success');
+    setTimeout(() => { location.reload(); }, 500);
+  }
+}
+
 function loadSettings() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
@@ -88,24 +105,24 @@ function saveOrders(newOrders) {
 }
 
 /**
- * Returns initial realistic SWAPEE orders including the exact receipt from the photo!
+ * Returns clean SWAPEE starter data matching the latest verified receipt
  */
 function getInitialSampleOrders() {
   const sample = [
     {
       id: 'UC664413',
-      date: '2025-01-08T14:32:00.000Z',
+      date: '2024-11-23T14:32:00.000Z',
       cashier: 'ASHA',
       customer: {
         id: 'ASHER',
         customerNo: '758D56-3',
         name: 'ASHER',
         phone: '+44 7700 900123',
-        address: 'MUSEUM'
+        address: 'MUSEUM, YORK Y01 7FR'
       },
       items: [
         {
-          name: 'Pixel 7A CHARC 128 GB',
+          name: 'Pixel 7a Charcoal 128GB (Unlocked)',
           qty: 1,
           price: 312.88,
           total: 312.88,
@@ -115,11 +132,11 @@ function getInitialSampleOrders() {
           sku: ''
         },
         {
-          name: 'MALVIK PRO 30W (511)',
+          name: 'MALVIK PRO 30W',
           qty: 1,
           price: 27.90,
           total: 27.90,
-          sku: 'A2419621',
+          sku: '511',
           imei1: '',
           imei2: '',
           sn: ''
@@ -139,45 +156,6 @@ function getInitialSampleOrders() {
         authCode: '465116',
         entryMethod: 'CHIP READ',
         aid: 'A000004123645'
-      },
-      warranty: 'For electronics and mobile warranty issues past the return period, call +44 131 662 9955.'
-    },
-    {
-      id: 'UC664390',
-      date: '2025-01-07T11:15:00.000Z',
-      cashier: 'ASHA',
-      customer: {
-        id: 'CALLUM',
-        customerNo: '812A44-1',
-        name: 'CALLUM R.',
-        phone: '+44 7700 900456',
-        address: 'EDINBURGH OLD TOWN'
-      },
-      items: [
-        {
-          name: 'iPhone 13 Midnight 128GB (Unlocked)',
-          qty: 1,
-          price: 389.00,
-          total: 389.00,
-          imei1: '356891048291045',
-          sn: 'FFGX8910PLMQ',
-          sku: 'APL-IP13-128'
-        }
-      ],
-      pricing: {
-        subtotal: 389.00,
-        discount: 10.00,
-        taxRate: 20.0,
-        taxAmount: 75.80,
-        grandTotal: 454.80
-      },
-      payment: {
-        method: 'MASTERCARD',
-        status: 'Paid',
-        acct: '****9021',
-        authCode: '319044',
-        entryMethod: 'TAP / CONTACTLESS',
-        aid: 'A0000000041010'
       },
       warranty: 'For electronics and mobile warranty issues past the return period, call +44 131 662 9955.'
     }
@@ -678,9 +656,9 @@ function loadSWAPEESampleReceipt() {
   document.getElementById('order-cashier').value = 'ASHA';
   document.getElementById('cust-name').value = 'ASHER';
   document.getElementById('cust-no').value = '758D56-3';
-  document.getElementById('cust-address').value = 'MUSEUM';
+  document.getElementById('cust-address').value = 'MUSEUM, YORK Y01 7FR';
   document.getElementById('cust-phone').value = '+44 7700 900123';
-  document.getElementById('order-date').value = '2025-01-08';
+  document.getElementById('order-date').value = '2024-11-23';
   
   document.getElementById('payment-method').value = 'VISA';
   document.getElementById('trans-acct').value = '****3471';
@@ -695,9 +673,9 @@ function loadSWAPEESampleReceipt() {
   const container = document.getElementById('product-items-list');
   container.innerHTML = '';
 
-  // Item 1: Pixel 7A with selectable IMEI 1, IMEI 2, and S/N active
+  // Item 1: Pixel 7a with selectable IMEI 1, IMEI 2, and S/N active
   addProductItemRow(
-    'Pixel 7A CHARC 128 GB',
+    'Pixel 7a Charcoal 128GB (Unlocked)',
     1,
     312.88,
     '',
@@ -709,10 +687,10 @@ function loadSWAPEESampleReceipt() {
 
   // Item 2: Malvik Charger with selectable SKU active
   addProductItemRow(
-    'MALVIK PRO 30W (511)',
+    'MALVIK PRO 30W',
     1,
     27.90,
-    'A2419621',
+    '511',
     '',
     '',
     '',
@@ -720,7 +698,7 @@ function loadSWAPEESampleReceipt() {
   );
 
   calculateTotals();
-  showToast('Loaded SWAPEE Pixel 7A sample receipt data!', 'info');
+  showToast('Loaded SWAPEE Pixel 7a sample receipt data!', 'info');
 }
 
 /* ==========================================================================
@@ -854,23 +832,23 @@ function openReceiptModal(order) {
 
   order.items.forEach(item => {
     const itemBlock = document.createElement('div');
-    itemBlock.className = 'space-y-0.5';
+    itemBlock.className = 'space-y-1';
 
     let detailsHtml = '';
-    if (item.imei1) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">IMEI1:</span><span>${escapeHTML(item.imei1)}</span></div>`;
-    if (item.imei2) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">IMEI2:</span><span>${escapeHTML(item.imei2)}</span></div>`;
-    if (item.sn) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">S/N:</span><span>${escapeHTML(item.sn)}</span></div>`;
-    if (item.sku) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">SKU:</span><span>${escapeHTML(item.sku)}</span></div>`;
+    if (item.imei1) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">IMEI1:</span><span class="font-bold">${escapeHTML(item.imei1)}</span></div>`;
+    if (item.imei2) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">IMEI2:</span><span class="font-bold">${escapeHTML(item.imei2)}</span></div>`;
+    if (item.sn) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">S/N:</span><span class="font-bold">${escapeHTML(item.sn)}</span></div>`;
+    if (item.sku) detailsHtml += `<div class="flex justify-between"><span class="text-black font-bold">SKU:</span><span class="font-bold">${escapeHTML(item.sku)}</span></div>`;
 
     itemBlock.innerHTML = `
-      <div class="flex justify-between items-baseline font-bold">
+      <div class="flex justify-between items-baseline font-black text-sm sm:text-base">
         <span>${escapeHTML(item.name)}</span>
         <span>${curr}${item.price.toFixed(2)}</span>
       </div>
-      <div class="text-[10px] text-slate-600">
+      <div class="text-xs text-black font-bold">
         (x${item.qty})
       </div>
-      ${detailsHtml ? `<div class="text-[10px] pl-1 font-mono">${detailsHtml}</div>` : ''}
+      ${detailsHtml ? `<div class="text-xs pl-2 font-mono font-bold space-y-0.5">${detailsHtml}</div>` : ''}
     `;
     itemsContainer.appendChild(itemBlock);
   });
@@ -900,10 +878,6 @@ function openReceiptModal(order) {
   // Warranty
   document.getElementById('receipt-warranty-text').textContent = order.warranty || appSettings.footer;
 
-  // Electronic Signature / Verification Hash
-  const hash = generateSimpleHash(`${order.id}-${order.customer.name}-${order.pricing.grandTotal}`);
-  document.getElementById('receipt-hash').textContent = hash;
-
   // Render Scannable QR Code
   generateReceiptQRCode(order);
 
@@ -918,6 +892,54 @@ function closeReceiptModal() {
 }
 
 /**
+ * Direct print receipt trigger
+ */
+function directPrintReceipt(orderId) {
+  const order = orders.find(o => o.id === orderId) || currentViewingOrder;
+  if (!order) return;
+  openReceiptModal(order);
+  setTimeout(() => {
+    window.print();
+  }, 200);
+}
+
+/**
+ * Download QR Code badge image directly from Dashboard / History table
+ */
+function downloadQRCodeForOrder(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  const tempContainer = document.createElement('div');
+  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
+
+  new QRCode(tempContainer, {
+    text: receiptUrl,
+    width: 260,
+    height: 260,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  setTimeout(() => {
+    const canvas = tempContainer.querySelector('canvas') || tempContainer.querySelector('img');
+    if (!canvas) {
+      showToast('Error generating QR', 'error');
+      return;
+    }
+    const dataUrl = canvas.tagName === 'CANVAS' ? canvas.toDataURL('image/png') : canvas.src;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `SWAPEE_QR_${order.id}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast(`QR badge for ${order.id} downloaded!`, 'success');
+  }, 120);
+}
+
+/**
  * Generate QR code containing the verified URL
  */
 function generateReceiptQRCode(order) {
@@ -929,8 +951,8 @@ function generateReceiptQRCode(order) {
   try {
     new QRCode(qrContainer, {
       text: receiptUrl,
-      width: 110,
-      height: 110,
+      width: 135,
+      height: 135,
       colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
@@ -1232,14 +1254,20 @@ function renderOrdersHistory() {
         </span>
       </td>
       <td class="py-3.5 px-4 text-center">
-        <div class="inline-flex items-center gap-1">
-          <button onclick="handleViewReceiptById('${order.id}')" title="View SWAPEE Receipt" class="p-1.5 rounded text-slate-600 hover:text-black hover:bg-slate-200 transition">
+        <div class="inline-flex items-center gap-1.5">
+          <button onclick="directPrintReceipt('${order.id}')" title="Direct Print Receipt" class="px-2 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-black font-thermal font-bold text-xs flex items-center gap-1 shadow-xs transition">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
+          </button>
+          <button onclick="downloadQRCodeForOrder('${order.id}')" title="Save QR (.PNG)" class="px-2 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-thermal font-bold text-xs flex items-center gap-1 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> QR
+          </button>
+          <button onclick="handleViewReceiptById('${order.id}')" title="View Full Receipt" class="p-1.5 rounded-lg text-slate-700 hover:text-black hover:bg-slate-200 transition">
             <i data-lucide="eye" class="w-4 h-4"></i>
           </button>
-          <button onclick="handleWhatsAppDirect('${order.id}')" title="Send WhatsApp" class="p-1.5 rounded text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition">
+          <button onclick="handleWhatsAppDirect('${order.id}')" title="Send WhatsApp" class="p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 transition">
             <i data-lucide="message-square" class="w-4 h-4"></i>
           </button>
-          <button onclick="deleteOrderRecord('${order.id}')" title="Delete" class="p-1.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+          <button onclick="deleteOrderRecord('${order.id}')" title="Delete" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
             <i data-lucide="trash" class="w-4 h-4"></i>
           </button>
         </div>
@@ -1320,7 +1348,7 @@ function renderRecentDashboardOrders() {
 
   recent.forEach(order => {
     const div = document.createElement('div');
-    div.className = 'flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition';
+    div.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition';
     div.innerHTML = `
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-full overflow-hidden bg-black p-0.5 shrink-0">
@@ -1336,11 +1364,19 @@ function renderRecentDashboardOrders() {
           </p>
         </div>
       </div>
-      <div class="text-right">
-        <p class="font-mono font-black text-slate-900 text-sm">${curr}${order.pricing.grandTotal.toFixed(2)}</p>
-        <button onclick="handleViewReceiptById('${order.id}')" class="text-[11px] font-bold text-slate-900 hover:underline">
-          View Receipt →
-        </button>
+      <div class="flex items-center justify-between sm:justify-end gap-3">
+        <span class="font-mono font-black text-slate-900 text-sm">${curr}${order.pricing.grandTotal.toFixed(2)}</span>
+        <div class="flex items-center gap-1.5">
+          <button onclick="directPrintReceipt('${order.id}')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-black text-white font-thermal font-bold text-xs flex items-center gap-1 shadow-xs transition" title="Direct Print Receipt">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
+          </button>
+          <button onclick="downloadQRCodeForOrder('${order.id}')" class="px-2 py-1 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-thermal font-bold text-xs flex items-center gap-1 transition" title="Download QR (.PNG)">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> QR
+          </button>
+          <button onclick="handleViewReceiptById('${order.id}')" class="px-2 py-1 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-thermal font-bold text-xs transition">
+            View
+          </button>
+        </div>
       </div>
     `;
     container.appendChild(div);
