@@ -786,20 +786,6 @@ function handleCreateReceipt(e) {
     }
   });
 
-    if (name) {
-      items.push({
-        name,
-        qty,
-        price,
-        total: qty * price,
-        sku,
-        imei1,
-        imei2,
-        sn
-      });
-    }
-  });
-
   if (items.length === 0) {
     showToast('Please add at least one product to the receipt!', 'error');
     return;
