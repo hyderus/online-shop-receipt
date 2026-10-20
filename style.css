@@ -51,6 +51,10 @@ body, html, input, select, textarea, button, .font-thermal, .receipt-paper, #pri
 }
 
 /* Customer Verification Mode (Lockdown: Only Green Floating Toast & Receipt visible, Actions Removed) */
+html.verification-mode header,
+html.verification-mode main,
+html.verification-mode #settings-modal,
+html.verification-mode #customer-verification-portal,
 body.verification-mode header,
 body.verification-mode main,
 body.verification-mode #settings-modal,
@@ -58,20 +62,26 @@ body.verification-mode #customer-verification-portal {
   display: none !important;
 }
 
+html.verification-mode,
+body.verification-mode {
+  background-color: #020617 !important;
+}
+
+html.verification-mode #receipt-modal,
 body.verification-mode #receipt-modal {
   display: flex !important;
   background-color: rgba(2, 6, 23, 0.95) !important;
-  padding-top: 5.5rem !important;
+  padding-bottom: 5.5rem !important;
 }
 
 /* Permanently remove the action options (Print, Save QR, WhatsApp, Link, Close) when viewing via QR code */
+html.verification-mode #receipt-modal-actions-bar,
 body.verification-mode #receipt-modal-actions-bar {
   display: none !important;
 }
 
-/* Floating green authentic invoice popup toast in verification mode */
-body.verification-mode #verified-authentic-toast {
-  display: flex !important;
+#verified-authentic-toast.hidden {
+  display: none !important;
 }
 
 /* Thermal receipt paper mode font */

@@ -33,8 +33,23 @@ let currentViewingOrder = null;
 let html5QrScannerInstance = null;
 let currentScannerRunning = false;
 
+// Pre-check verification mode immediately (before DOMContentLoaded) to eliminate any background flash
+if (window.location.search && window.location.search.indexOf('receipt=') !== -1) {
+  isCustomerVerificationMode = true;
+  document.documentElement.classList.add('verification-mode');
+  if (document.body) document.body.classList.add('verification-mode');
+}
+
 // Initialize on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
+  // If in customer verification mode, bypass dashboard rendering completely to prevent any split-second background flash!
+  if (window.location.search && window.location.search.indexOf('receipt=') !== -1) {
+    handleDeepLink();
+    if (window.lucide) lucide.createIcons();
+    window.addEventListener('popstate', handleDeepLink);
+    return;
+  }
+
   if (window.lucide) {
     lucide.createIcons();
   }
@@ -1591,25 +1606,54 @@ function restoreOrdersJSON(e) {
    ========================================================================== */
 
 let isCustomerVerificationMode = false;
+let verifiedToastTimer = null;
 
 /**
- * Floating green authentic invoice popup toast controls
+ * Floating green authentic invoice popup toast controls (Pops up from bottom & auto-dismisses after 5s)
  */
 function showVerifiedAuthenticToast() {
   const toast = document.getElementById('verified-authentic-toast');
-  if (toast) {
-    toast.classList.remove('hidden');
-    toast.classList.add('flex');
-    if (window.lucide) lucide.createIcons();
+  if (!toast) return;
+
+  if (verifiedToastTimer) {
+    clearTimeout(verifiedToastTimer);
+    verifiedToastTimer = null;
   }
+
+  // Make element flex and visible
+  toast.classList.remove('hidden');
+  toast.classList.add('flex');
+  if (window.lucide) lucide.createIcons();
+
+  // Smooth entrance: slide up from bottom
+  requestAnimationFrame(() => {
+    toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+  });
+
+  // Automatically dismiss after 5 seconds
+  verifiedToastTimer = setTimeout(() => {
+    dismissVerifiedToast();
+  }, 5000);
 }
 
 function dismissVerifiedToast() {
   const toast = document.getElementById('verified-authentic-toast');
-  if (toast) {
-    toast.classList.add('hidden');
-    toast.classList.remove('flex');
+  if (!toast) return;
+
+  if (verifiedToastTimer) {
+    clearTimeout(verifiedToastTimer);
+    verifiedToastTimer = null;
   }
+
+  // Smooth exit: slide down to bottom & fade out
+  toast.classList.remove('translate-y-0', 'opacity-100');
+  toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+
+  setTimeout(() => {
+    toast.classList.remove('flex');
+    toast.classList.add('hidden');
+  }, 500);
 }
 window.showVerifiedAuthenticToast = showVerifiedAuthenticToast;
 window.dismissVerifiedToast = dismissVerifiedToast;
@@ -1720,7 +1764,8 @@ function handleDeepLink() {
 function enterCustomerVerificationMode(order, requestedId) {
   isCustomerVerificationMode = true;
 
-  // Add lockdown class to body (completely hides header, main, action options)
+  // Add lockdown class to body and html (completely hides header, main, action options)
+  document.documentElement.classList.add('verification-mode');
   document.body.classList.add('verification-mode');
 
   // Prevent back navigation or escaping to admin
