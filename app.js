@@ -1,21 +1,24 @@
 /**
- * ShopReceipt Pro — Virtual Receipt & QR Scanner System
- * Handles Order State, QR Code Generation & Scanning, WhatsApp Sharing, and Verification.
+ * SWAPEE — Virtual Receipt & QR Scanner System
+ * Official Store Portal for SWAPEE (4 South Clerk Street, Edinburgh EH8 9JE, UK)
  */
 
-// Application State Keys
-const STORAGE_KEY_ORDERS = 'shopreceipt_orders_v1';
-const STORAGE_KEY_SETTINGS = 'shopreceipt_settings_v1';
+// Application Storage Keys
+const STORAGE_KEY_ORDERS = 'swapee_orders_v2';
+const STORAGE_KEY_SETTINGS = 'swapee_settings_v2';
 
-// Default Shop Configuration
+// Official SWAPEE Configuration
 const defaultSettings = {
-  name: 'Apex Boutique & Electronics',
-  tagline: 'Curated Quality & Verified Authentic Products',
-  currency: '$',
-  phone: '+1 (555) 839-2041',
-  email: 'support@apexboutique.com',
-  address: '742 Market Street, San Francisco, CA 94103',
-  footer: 'Thank you for your purchase! Official warranty valid with this virtual QR receipt.'
+  name: 'SWAPEE',
+  tagline: 'SINCE 2002',
+  address: '4 South Clerk Street, Edinburgh EH8 9JE, UK',
+  phone: '+44 131 662 9955',
+  vatNo: 'GB 693 8235 95',
+  companyNo: 'SC175148',
+  currency: '£',
+  taxRate: 20,
+  cashier: 'ASHA',
+  footer: 'For electronics and mobile warranty issues past the return period, call +44 131 662 9955.'
 };
 
 // Global Runtime State
@@ -27,26 +30,17 @@ let currentScannerRunning = false;
 
 // Initialize on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize Lucide icons
   if (window.lucide) {
     lucide.createIcons();
   }
 
-  // Apply Store Settings to UI
   applySettingsToUI();
-
-  // Populate initial product row in sale form
   resetSaleForm();
-
-  // Update Stats & UI
   updateDashboardStats();
   renderRecentDashboardOrders();
   renderOrdersHistory();
-
-  // Handle URL deep-linking (e.g., ?receipt=REC-2026-1001 or #view/REC-...)
   handleDeepLink();
 
-  // Event listener for popstate
   window.addEventListener('popstate', handleDeepLink);
 });
 
@@ -70,7 +64,7 @@ function saveSettings(newSettings) {
   applySettingsToUI();
   updateDashboardStats();
   renderOrdersHistory();
-  showToast('Store settings saved successfully!', 'success');
+  showToast('SWAPEE settings updated!', 'success');
 }
 
 function loadOrders() {
@@ -82,7 +76,6 @@ function loadOrders() {
   } catch (e) {
     console.error('Failed to load orders', e);
   }
-  // If empty, return initial realistic starter orders
   return getInitialSampleOrders();
 }
 
@@ -94,90 +87,99 @@ function saveOrders(newOrders) {
   renderOrdersHistory();
 }
 
+/**
+ * Returns initial realistic SWAPEE orders including the exact receipt from the photo!
+ */
 function getInitialSampleOrders() {
   const sample = [
     {
-      id: 'REC-2026-8491',
-      date: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 mins ago
+      id: 'UC664413',
+      date: '2025-01-08T14:32:00.000Z',
+      cashier: 'ASHA',
       customer: {
-        name: 'Alexander Wright',
-        phone: '+1 415-555-0192',
-        email: 'alex.wright@email.com',
-        address: '220 Montgomery St, San Francisco, CA'
+        id: 'ASHER',
+        customerNo: '758D56-3',
+        name: 'ASHER',
+        phone: '+44 7700 900123',
+        address: 'MUSEUM'
       },
       items: [
-        { name: 'Sony WH-1000XM5 Noise Canceling Headphones', sku: 'SNY-WH5-BLK', category: 'Electronics', price: 349.99, qty: 1, total: 349.99 },
-        { name: 'Hard Shell Travel Protection Case', sku: 'CASE-WH5', category: 'Accessories', price: 29.50, qty: 1, total: 29.50 }
+        {
+          name: 'Pixel 7A CHARC 128 GB',
+          qty: 1,
+          price: 312.88,
+          total: 312.88,
+          imei1: '353529407882886',
+          imei2: '353529407882894',
+          sn: '39251JEHN06086',
+          sku: ''
+        },
+        {
+          name: 'MALVIK PRO 30W (511)',
+          qty: 1,
+          price: 27.90,
+          total: 27.90,
+          sku: 'A2419621',
+          imei1: '',
+          imei2: '',
+          sn: ''
+        }
       ],
       pricing: {
-        subtotal: 379.49,
+        subtotal: 340.78,
         discount: 20.00,
-        taxRate: 8.5,
-        taxAmount: 30.56,
-        shipping: 0.00,
-        grandTotal: 390.05
+        taxRate: 20.0,
+        taxAmount: 64.16,
+        grandTotal: 384.94
       },
       payment: {
-        method: 'Credit / Debit Card',
-        status: 'Paid'
+        method: 'VISA',
+        status: 'Paid',
+        acct: '****3471',
+        authCode: '465116',
+        entryMethod: 'CHIP READ',
+        aid: 'A000004123645'
       },
-      warranty: '1 Year Manufacturer Limited Warranty',
-      notes: 'Serial #SN-2026-X84192. Express 2-Day Air Delivery.'
+      warranty: 'For electronics and mobile warranty issues past the return period, call +44 131 662 9955.'
     },
     {
-      id: 'REC-2026-7215',
-      date: new Date(Date.now() - 1000 * 60 * 180).toISOString(), // 3 hours ago
+      id: 'UC664390',
+      date: '2025-01-07T11:15:00.000Z',
+      cashier: 'ASHA',
       customer: {
-        name: 'Jessica Reynolds',
-        phone: '+1 212-555-0144',
-        email: 'jess.reynolds@gmail.com',
-        address: '740 Park Avenue, New York, NY'
+        id: 'CALLUM',
+        customerNo: '812A44-1',
+        name: 'CALLUM R.',
+        phone: '+44 7700 900456',
+        address: 'EDINBURGH OLD TOWN'
       },
       items: [
-        { name: 'Minimalist Titanium Smart Watch Gen 3', sku: 'WCH-TT3-SLV', category: 'Electronics', price: 220.00, qty: 1, total: 220.00 }
+        {
+          name: 'iPhone 13 Midnight 128GB (Unlocked)',
+          qty: 1,
+          price: 389.00,
+          total: 389.00,
+          imei1: '356891048291045',
+          sn: 'FFGX8910PLMQ',
+          sku: 'APL-IP13-128'
+        }
       ],
       pricing: {
-        subtotal: 220.00,
-        discount: 0.00,
-        taxRate: 5.0,
-        taxAmount: 11.00,
-        shipping: 12.00,
-        grandTotal: 243.00
+        subtotal: 389.00,
+        discount: 10.00,
+        taxRate: 20.0,
+        taxAmount: 75.80,
+        grandTotal: 454.80
       },
       payment: {
-        method: 'Online Payment / Gateway',
-        status: 'Paid'
+        method: 'MASTERCARD',
+        status: 'Paid',
+        acct: '****9021',
+        authCode: '319044',
+        entryMethod: 'TAP / CONTACTLESS',
+        aid: 'A0000000041010'
       },
-      warranty: '6 Months Replacement Guarantee',
-      notes: 'Gift wrap requested with message card.'
-    },
-    {
-      id: 'REC-2026-6102',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // Yesterday
-      customer: {
-        name: 'David Kim',
-        phone: '+1 650-555-0178',
-        email: 'dkim@valleytech.io',
-        address: '380 University Ave, Palo Alto, CA'
-      },
-      items: [
-        { name: 'Ergonomic Mechanical Keyboard (RGB Brown Switches)', sku: 'KB-MECH-BR', category: 'Accessories', price: 145.00, qty: 1, total: 145.00 },
-        { name: 'Custom Coiled Aviator Cable (Midnight Blue)', sku: 'CBL-AV-BLU', category: 'Accessories', price: 35.00, qty: 2, total: 70.00 }
-      ],
-      pricing: {
-        subtotal: 215.00,
-        discount: 15.00,
-        taxRate: 0.0,
-        taxAmount: 0.00,
-        shipping: 10.00,
-        grandTotal: 210.00
-      },
-      payment: {
-        method: 'Cash on Delivery (COD)',
-        status: 'Cash on Delivery'
-      },
-      warranty: '1 Year Warranty',
-      notes: 'Deliver to office reception on 4th floor.'
+      warranty: 'For electronics and mobile warranty issues past the return period, call +44 131 662 9955.'
     }
   ];
   localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(sample));
@@ -189,67 +191,58 @@ function getInitialSampleOrders() {
    ========================================================================== */
 
 function switchTab(tabId) {
-  // Hide all tabs
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
 
-  // Show selected tab
   const activeTab = document.getElementById(`tab-${tabId}`);
   if (activeTab) {
     activeTab.classList.remove('hidden');
   }
 
-  // Update desktop navigation active styling
   document.querySelectorAll('.nav-tab').forEach(btn => {
-    btn.classList.remove('text-brand-700', 'bg-white', 'shadow-sm');
+    btn.classList.remove('text-slate-900', 'bg-white', 'shadow-sm');
     btn.classList.add('text-slate-600');
   });
 
   const activeBtn = document.getElementById(`tab-btn-${tabId}`);
   if (activeBtn) {
-    activeBtn.classList.add('text-brand-700', 'bg-white', 'shadow-sm');
+    activeBtn.classList.add('text-slate-900', 'bg-white', 'shadow-sm');
     activeBtn.classList.remove('text-slate-600');
   }
 
-  // Update mobile tab styling
   ['dashboard', 'new-sale', 'scan-qr', 'history'].forEach(id => {
     const mobileBtn = document.getElementById(`mobile-tab-btn-${id}`);
     if (mobileBtn) {
       if (id === tabId) {
-        mobileBtn.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold text-center text-brand-700 bg-white shadow-sm flex items-center justify-center gap-1.5';
+        mobileBtn.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold text-center text-slate-900 bg-white shadow-sm flex items-center justify-center gap-1.5';
       } else {
         mobileBtn.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-medium text-center text-slate-600 hover:bg-slate-200/50 flex items-center justify-center gap-1.5';
       }
     }
   });
 
-  // Re-run lucide icons refresh
   if (window.lucide) {
     lucide.createIcons();
   }
 
-  // Tab specific lifecycle
   if (tabId === 'history') {
     renderOrdersHistory();
   } else if (tabId === 'dashboard') {
     updateDashboardStats();
     renderRecentDashboardOrders();
   } else if (tabId === 'scan-qr') {
-    // If navigating to scan QR, ensure clean viewfinder
     document.getElementById('scan-feedback').classList.add('hidden');
   } else if (tabId !== 'scan-qr' && currentScannerRunning) {
-    // Automatically stop scanner if user leaves QR tab to save battery & camera
     stopQRScanner();
   }
 }
 
 /* ==========================================================================
-   SALE FORM & DYNAMIC ITEM ROWS
+   SALE FORM & ITEM BUILDER (IMEI, S/N, SKU)
    ========================================================================== */
 
 function generateReceiptNumber() {
-  const year = new Date().getFullYear();
-  const randomNum = Math.floor(1000 + Math.random() * 9000);
-  return `REC-${year}-${randomNum}`;
+  const randomNum = Math.floor(100000 + Math.random() * 900000);
+  return `UC${randomNum}`;
 }
 
 function generateNewReceiptNo() {
@@ -260,74 +253,85 @@ function resetSaleForm() {
   const form = document.getElementById('sale-form');
   if (form) form.reset();
 
-  // Set default receipt number
   generateNewReceiptNo();
 
-  // Set default date to current local datetime
-  const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  document.getElementById('order-date').value = now.toISOString().slice(0, 16);
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('order-date').value = today;
+  document.getElementById('order-cashier').value = appSettings.cashier || 'ASHA';
+  document.getElementById('order-warranty').value = appSettings.footer;
 
-  // Set default warranty from store settings
-  document.getElementById('order-warranty').value = '1 Year Official Warranty / 7 Days Replacement';
-
-  // Clear product items list & add one fresh row
   const itemsContainer = document.getElementById('product-items-list');
   itemsContainer.innerHTML = '';
   addProductItemRow();
 
-  // Recalculate totals
   calculateTotals();
-
   if (window.lucide) lucide.createIcons();
 }
 
-function addProductItemRow(name = '', sku = '', price = '', qty = 1) {
+function addProductItemRow(name = '', qty = 1, price = '', sku = '', imei1 = '', imei2 = '', sn = '') {
   const container = document.getElementById('product-items-list');
   const index = container.children.length;
 
   const row = document.createElement('div');
-  row.className = 'product-item-row p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 transition duration-150';
+  row.className = 'product-item-row p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3';
   row.innerHTML = `
-    <div class="flex items-center justify-between">
-      <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-        <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold flex items-center justify-center">${index + 1}</span>
-        Product Details
+    <div class="flex items-center justify-between pb-1 border-b border-slate-200/60">
+      <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5 font-thermal">
+        <span class="w-5 h-5 rounded bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center">${index + 1}</span>
+        ITEM SPECIFICATION
       </span>
       ${index > 0 ? `
-        <button type="button" onclick="removeProductItemRow(this)" class="text-xs text-rose-500 hover:text-rose-700 flex items-center gap-1 font-medium transition">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove
+        <button type="button" onclick="removeProductItemRow(this)" class="text-xs text-rose-600 hover:underline flex items-center gap-1 font-semibold">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove Item
         </button>
       ` : ''}
     </div>
 
+    <!-- Main Title, Qty, Price -->
     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-      <!-- Product Name -->
-      <div class="sm:col-span-5">
-        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Product Title / Name <span class="text-rose-500">*</span></label>
-        <input type="text" required placeholder="e.g. Wireless Bluetooth Earbuds" value="${name}"
-          class="item-name w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs bg-white" />
+      <div class="sm:col-span-6">
+        <label class="block text-[11px] font-bold text-slate-700 mb-1">Item Title / Model Description <span class="text-rose-500">*</span></label>
+        <input type="text" required placeholder="e.g. Pixel 7A CHARC 128 GB" value="${escapeHTML(name)}"
+          class="item-name w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white font-semibold uppercase" />
       </div>
 
-      <!-- SKU / Code -->
       <div class="sm:col-span-3">
-        <label class="block text-[11px] font-semibold text-slate-600 mb-1">SKU / Code</label>
-        <input type="text" placeholder="e.g. EB-PRO-01" value="${sku}"
-          class="item-sku w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs bg-white font-mono" />
-      </div>
-
-      <!-- Quantity -->
-      <div class="sm:col-span-2">
-        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Qty <span class="text-rose-500">*</span></label>
+        <label class="block text-[11px] font-bold text-slate-700 mb-1">Qty <span class="text-rose-500">*</span></label>
         <input type="number" required min="1" step="1" value="${qty}" oninput="calculateTotals()"
-          class="item-qty w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs bg-white font-mono text-center" />
+          class="item-qty w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white font-mono text-center" />
       </div>
 
-      <!-- Unit Price -->
-      <div class="sm:col-span-2">
-        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Unit Price (${appSettings.currency}) <span class="text-rose-500">*</span></label>
+      <div class="sm:col-span-3">
+        <label class="block text-[11px] font-bold text-slate-700 mb-1">Unit Price (${appSettings.currency}) <span class="text-rose-500">*</span></label>
         <input type="number" required min="0" step="any" placeholder="0.00" value="${price}" oninput="calculateTotals()"
-          class="item-price w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs bg-white font-mono text-right" />
+          class="item-price w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white font-mono text-right font-bold" />
+      </div>
+    </div>
+
+    <!-- Mobile / Electronics Serial Numbers (IMEI 1, IMEI 2, S/N, SKU) -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1 bg-white p-2.5 rounded-lg border border-slate-200/80">
+      <div>
+        <label class="block text-[10px] font-mono text-slate-500 uppercase">IMEI 1 (Optional)</label>
+        <input type="text" placeholder="e.g. 353529407882886" value="${escapeHTML(imei1)}"
+          class="item-imei1 w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono" />
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-mono text-slate-500 uppercase">IMEI 2 (Optional)</label>
+        <input type="text" placeholder="e.g. 353529407882894" value="${escapeHTML(imei2)}"
+          class="item-imei2 w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono" />
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-mono text-slate-500 uppercase">S/N (Serial No)</label>
+        <input type="text" placeholder="e.g. 39251JEHN06086" value="${escapeHTML(sn)}"
+          class="item-sn w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono uppercase" />
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-mono text-slate-500 uppercase">SKU / Part Code</label>
+        <input type="text" placeholder="e.g. A2419621" value="${escapeHTML(sku)}"
+          class="item-sku w-full px-2 py-1 rounded border border-slate-200 text-[11px] font-mono uppercase" />
       </div>
     </div>
   `;
@@ -340,7 +344,6 @@ function addProductItemRow(name = '', sku = '', price = '', qty = 1) {
 function removeProductItemRow(button) {
   const row = button.closest('.product-item-row');
   row.remove();
-  // Re-index remaining rows
   const container = document.getElementById('product-items-list');
   Array.from(container.children).forEach((child, idx) => {
     const badge = child.querySelector('.text-\\[11px\\]');
@@ -361,17 +364,15 @@ function calculateTotals() {
 
   const discount = parseFloat(document.getElementById('calc-discount')?.value) || 0;
   const taxRate = parseFloat(document.getElementById('calc-tax-rate')?.value) || 0;
-  const shipping = parseFloat(document.getElementById('calc-shipping')?.value) || 0;
 
   const discountedSubtotal = Math.max(0, subtotal - discount);
   const taxAmount = (discountedSubtotal * taxRate) / 100;
-  const grandTotal = Math.max(0, discountedSubtotal + taxAmount + shipping);
+  const grandTotal = Math.max(0, discountedSubtotal + taxAmount);
 
   const curr = appSettings.currency;
   document.getElementById('summary-subtotal').textContent = `${curr}${subtotal.toFixed(2)}`;
   document.getElementById('summary-discount').textContent = `-${curr}${discount.toFixed(2)}`;
-  document.getElementById('summary-tax').textContent = `${curr}${taxAmount.toFixed(2)} (${taxRate}%)`;
-  document.getElementById('summary-shipping').textContent = `${curr}${shipping.toFixed(2)}`;
+  document.getElementById('summary-tax').textContent = `${curr}${taxAmount.toFixed(2)}`;
   document.getElementById('summary-grand-total').textContent = `${curr}${grandTotal.toFixed(2)}`;
 
   return {
@@ -379,9 +380,57 @@ function calculateTotals() {
     discount,
     taxRate,
     taxAmount,
-    shipping,
     grandTotal
   };
+}
+
+/**
+ * Loads the exact sample receipt matching the user's photo
+ */
+function loadSWAPEESampleReceipt() {
+  document.getElementById('receipt-number').value = 'UC664413';
+  document.getElementById('order-cashier').value = 'ASHA';
+  document.getElementById('cust-name').value = 'ASHER';
+  document.getElementById('cust-no').value = '758D56-3';
+  document.getElementById('cust-address').value = 'MUSEUM';
+  document.getElementById('cust-phone').value = '+44 7700 900123';
+  document.getElementById('order-date').value = '2025-01-08';
+  
+  document.getElementById('payment-method').value = 'VISA';
+  document.getElementById('trans-acct').value = '****3471';
+  document.getElementById('trans-auth').value = '465116';
+  document.getElementById('trans-entry').value = 'CHIP READ';
+  document.getElementById('trans-aid').value = 'A000004123645';
+  document.getElementById('payment-status').value = 'Paid';
+  
+  document.getElementById('calc-discount').value = '20.00';
+  document.getElementById('calc-tax-rate').value = '20';
+
+  const container = document.getElementById('product-items-list');
+  container.innerHTML = '';
+
+  addProductItemRow(
+    'Pixel 7A CHARC 128 GB',
+    1,
+    312.88,
+    '',
+    '353529407882886',
+    '353529407882894',
+    '39251JEHN06086'
+  );
+
+  addProductItemRow(
+    'MALVIK PRO 30W (511)',
+    1,
+    27.90,
+    'A2419621',
+    '',
+    '',
+    ''
+  );
+
+  calculateTotals();
+  showToast('Loaded SWAPEE Pixel 7A sample receipt data!', 'info');
 }
 
 /* ==========================================================================
@@ -391,33 +440,45 @@ function calculateTotals() {
 function handleCreateReceipt(e) {
   e.preventDefault();
 
-  const customerName = document.getElementById('cust-name').value.trim();
-  const customerPhone = document.getElementById('cust-phone').value.trim();
-  const customerEmail = document.getElementById('cust-email').value.trim();
-  const customerAddress = document.getElementById('cust-address').value.trim();
   const receiptNo = document.getElementById('receipt-number').value.trim() || generateReceiptNumber();
-  const orderDate = document.getElementById('order-date').value || new Date().toISOString();
+  const cashier = document.getElementById('order-cashier').value.trim() || 'ASHA';
+  const custName = document.getElementById('cust-name').value.trim();
+  const custNo = document.getElementById('cust-no').value.trim() || 'N/A';
+  const custAddress = document.getElementById('cust-address').value.trim() || 'N/A';
+  const custPhone = document.getElementById('cust-phone').value.trim();
+  const orderDate = document.getElementById('order-date').value || new Date().toISOString().slice(0, 10);
+
   const paymentMethod = document.getElementById('payment-method').value;
   const paymentStatus = document.getElementById('payment-status').value;
+  const acct = document.getElementById('trans-acct').value.trim();
+  const authCode = document.getElementById('trans-auth').value.trim();
+  const entryMethod = document.getElementById('trans-entry').value.trim();
+  const aid = document.getElementById('trans-aid').value.trim();
   const warranty = document.getElementById('order-warranty').value.trim();
-  const notes = document.getElementById('order-notes').value.trim();
 
-  // Collect Product Items
+  // Collect Product Line Items
   const itemRows = document.querySelectorAll('.product-item-row');
   const items = [];
 
   itemRows.forEach(row => {
     const name = row.querySelector('.item-name')?.value.trim();
-    const sku = row.querySelector('.item-sku')?.value.trim() || 'N/A';
     const qty = parseInt(row.querySelector('.item-qty')?.value, 10) || 1;
     const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+    const sku = row.querySelector('.item-sku')?.value.trim();
+    const imei1 = row.querySelector('.item-imei1')?.value.trim();
+    const imei2 = row.querySelector('.item-imei2')?.value.trim();
+    const sn = row.querySelector('.item-sn')?.value.trim();
+
     if (name) {
       items.push({
         name,
-        sku,
         qty,
         price,
-        total: qty * price
+        total: qty * price,
+        sku,
+        imei1,
+        imei2,
+        sn
       });
     }
   });
@@ -429,144 +490,118 @@ function handleCreateReceipt(e) {
 
   const totals = calculateTotals();
 
-  // Create Order Object
   const newOrder = {
     id: receiptNo,
     date: new Date(orderDate).toISOString(),
+    cashier,
     customer: {
-      name: customerName,
-      phone: customerPhone,
-      email: customerEmail,
-      address: customerAddress
+      id: custName,
+      customerNo: custNo,
+      name: custName,
+      address: custAddress,
+      phone: custPhone
     },
     items,
     pricing: totals,
     payment: {
       method: paymentMethod,
-      status: paymentStatus
+      status: paymentStatus,
+      acct,
+      authCode,
+      entryMethod,
+      aid
     },
     warranty,
-    notes,
     createdAt: new Date().toISOString()
   };
 
-  // Prepend to orders list
   orders.unshift(newOrder);
   saveOrders(orders);
 
-  // Trigger celebration confetti
   if (typeof confetti === 'function') {
-    confetti({
-      particleCount: 60,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+    confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
   }
 
-  showToast(`Virtual Receipt ${newOrder.id} generated!`, 'success');
-
-  // Open the receipt modal for preview and printing
+  showToast(`SWAPEE Receipt ${newOrder.id} generated!`, 'success');
   openReceiptModal(newOrder);
-
-  // Reset the form for next sale
   resetSaleForm();
 }
 
 /* ==========================================================================
-   VIRTUAL RECEIPT MODAL & QR RENDERING
+   VIRTUAL RECEIPT RENDERING (AUTHENTIC THERMAL FORMAT)
    ========================================================================== */
 
 function openReceiptModal(order) {
   currentViewingOrder = order;
   const curr = appSettings.currency;
 
-  // Header & Store Information
-  document.getElementById('receipt-store-name').textContent = appSettings.name;
-  document.getElementById('receipt-store-tagline').textContent = appSettings.tagline;
-  document.getElementById('receipt-store-phone').textContent = `Tel: ${appSettings.phone}`;
-  document.getElementById('receipt-store-email').textContent = appSettings.email;
-  document.getElementById('receipt-store-address').textContent = appSettings.address;
-  document.getElementById('receipt-footer-msg').textContent = appSettings.footer;
-
-  // Order & Receipt Metadata
+  // Header & IDs
   document.getElementById('receipt-view-id').textContent = order.id;
-  document.getElementById('receipt-view-date').textContent = formatReceiptDate(order.date);
+  document.getElementById('receipt-view-date').textContent = formatUKDate(order.date);
+  document.getElementById('receipt-view-cashier').textContent = order.cashier || 'ASHA';
 
-  // Status Badge
-  const statusPill = document.getElementById('receipt-status-pill');
-  statusPill.textContent = order.payment.status.toUpperCase();
-  if (order.payment.status === 'Paid') {
-    statusPill.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase mb-2 bg-emerald-100 text-emerald-800 border border-emerald-200';
-  } else if (order.payment.status === 'Pending') {
-    statusPill.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase mb-2 bg-amber-100 text-amber-800 border border-amber-200';
-  } else {
-    statusPill.className = 'inline-block px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase mb-2 bg-purple-100 text-purple-800 border border-purple-200';
-  }
+  // Customer
+  document.getElementById('receipt-cust-no').textContent = order.customer.customerNo || 'N/A';
+  document.getElementById('receipt-cust-name').textContent = order.customer.name || order.customer.id || 'N/A';
+  document.getElementById('receipt-cust-address').textContent = order.customer.address || 'N/A';
 
-  // Customer Information (Sold to whom)
-  document.getElementById('receipt-cust-name').textContent = order.customer.name;
-  document.getElementById('receipt-cust-phone').textContent = order.customer.phone || 'N/A';
-  document.getElementById('receipt-cust-email').textContent = order.customer.email || 'No email provided';
-  document.getElementById('receipt-cust-address').textContent = order.customer.address || 'Standard Delivery / In-Store Pickup';
+  // Product Line Items Render
+  const itemsContainer = document.getElementById('receipt-items-container');
+  itemsContainer.innerHTML = '';
 
-  // Payment & Terms
-  document.getElementById('receipt-pay-method').textContent = order.payment.method;
-  document.getElementById('receipt-warranty-info').textContent = order.warranty || 'Standard Store Terms';
-  document.getElementById('receipt-notes').textContent = order.notes || 'None';
-
-  // Render Product Items Table
-  const itemsTbody = document.getElementById('receipt-items-tbody');
-  itemsTbody.innerHTML = '';
   order.items.forEach(item => {
-    const tr = document.createElement('tr');
-    tr.className = 'border-b border-slate-100 text-xs';
-    tr.innerHTML = `
-      <td class="py-2.5">
-        <p class="font-bold text-slate-800">${escapeHTML(item.name)}</p>
-        ${item.sku && item.sku !== 'N/A' ? `<p class="text-[10px] text-slate-400 font-mono">SKU: ${escapeHTML(item.sku)}</p>` : ''}
-      </td>
-      <td class="py-2.5 text-center font-mono font-medium text-slate-600">${item.qty}</td>
-      <td class="py-2.5 text-right font-mono text-slate-600">${curr}${item.price.toFixed(2)}</td>
-      <td class="py-2.5 text-right font-mono font-bold text-slate-800">${curr}${(item.qty * item.price).toFixed(2)}</td>
+    const itemBlock = document.createElement('div');
+    itemBlock.className = 'space-y-0.5';
+
+    let detailsHtml = '';
+    if (item.imei1) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">IMEI1:</span><span>${escapeHTML(item.imei1)}</span></div>`;
+    if (item.imei2) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">IMEI2:</span><span>${escapeHTML(item.imei2)}</span></div>`;
+    if (item.sn) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">S/N:</span><span>${escapeHTML(item.sn)}</span></div>`;
+    if (item.sku) detailsHtml += `<div class="flex justify-between"><span class="text-slate-600">SKU:</span><span>${escapeHTML(item.sku)}</span></div>`;
+
+    itemBlock.innerHTML = `
+      <div class="flex justify-between items-baseline font-bold">
+        <span>${escapeHTML(item.name)}</span>
+        <span>${curr}${item.price.toFixed(2)}</span>
+      </div>
+      <div class="text-[10px] text-slate-600">
+        (x${item.qty})
+      </div>
+      ${detailsHtml ? `<div class="text-[10px] pl-1 font-mono">${detailsHtml}</div>` : ''}
     `;
-    itemsTbody.appendChild(tr);
+    itemsContainer.appendChild(itemBlock);
   });
 
-  // Totals Breakdown
+  // Calculations
   document.getElementById('receipt-subtotal').textContent = `${curr}${order.pricing.subtotal.toFixed(2)}`;
 
   const discountRow = document.getElementById('receipt-discount-row');
   if (order.pricing.discount > 0) {
     discountRow.classList.remove('hidden');
-    document.getElementById('receipt-discount').textContent = `-${curr}${order.pricing.discount.toFixed(2)}`;
+    document.getElementById('receipt-discount').textContent = `${curr}${order.pricing.discount.toFixed(2)}`;
   } else {
     discountRow.classList.add('hidden');
   }
 
-  const taxRow = document.getElementById('receipt-tax-row');
-  if (order.pricing.taxAmount > 0) {
-    taxRow.classList.remove('hidden');
-    document.getElementById('receipt-tax-label').textContent = `Tax / VAT (${order.pricing.taxRate}%)`;
-    document.getElementById('receipt-tax').textContent = `${curr}${order.pricing.taxAmount.toFixed(2)}`;
-  } else {
-    taxRow.classList.add('hidden');
-  }
-
-  const shippingRow = document.getElementById('receipt-shipping-row');
-  if (order.pricing.shipping > 0) {
-    shippingRow.classList.remove('hidden');
-    document.getElementById('receipt-shipping').textContent = `${curr}${order.pricing.shipping.toFixed(2)}`;
-  } else {
-    shippingRow.classList.add('hidden');
-  }
-
+  document.getElementById('receipt-tax-label').textContent = `TAX (${order.pricing.taxRate || 20}%)`;
+  document.getElementById('receipt-tax').textContent = `${curr}${order.pricing.taxAmount.toFixed(2)}`;
   document.getElementById('receipt-grand-total').textContent = `${curr}${order.pricing.grandTotal.toFixed(2)}`;
 
-  // Verification Hash / Electronic Signature
+  // Transaction
+  document.getElementById('receipt-pay-method').textContent = order.payment.method || 'VISA';
+  document.getElementById('receipt-trans-acct').textContent = order.payment.acct || '****3471';
+  document.getElementById('receipt-trans-auth').textContent = order.payment.authCode || '465116';
+  document.getElementById('receipt-trans-entry').textContent = order.payment.entryMethod || 'CHIP READ';
+  document.getElementById('receipt-trans-aid').textContent = order.payment.aid || 'A000004123645';
+
+  // Warranty
+  document.getElementById('receipt-warranty-text').textContent = order.warranty || appSettings.footer;
+
+  // Electronic Signature / Verification Hash
   const hash = generateSimpleHash(`${order.id}-${order.customer.name}-${order.pricing.grandTotal}`);
   document.getElementById('receipt-hash').textContent = hash;
 
-  // Generate QR Code
+  // Render Scannable QR Code
   generateReceiptQRCode(order);
 
   // Reveal Modal
@@ -580,22 +615,20 @@ function closeReceiptModal() {
 }
 
 /**
- * Generate QR code that contains the verified URL and order metadata
+ * Generate QR code containing the verified URL
  */
 function generateReceiptQRCode(order) {
   const qrContainer = document.getElementById('receipt-qrcode-canvas');
-  qrContainer.innerHTML = ''; // clear previous
+  qrContainer.innerHTML = '';
 
-  // The QR code contains the full link to this receipt
-  // Using origin + pathname + query param ?receipt=REC-...
   const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
 
   try {
     new QRCode(qrContainer, {
       text: receiptUrl,
-      width: 104,
-      height: 104,
-      colorDark: '#0f172a',
+      width: 110,
+      height: 110,
+      colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
     });
@@ -621,11 +654,11 @@ function downloadQRCodePNG() {
 
   const a = document.createElement('a');
   a.href = dataUrl;
-  a.download = `QR_${currentViewingOrder.id}.png`;
+  a.download = `SWAPEE_QR_${currentViewingOrder.id}.png`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  showToast('QR Code image downloaded!', 'success');
+  showToast('SWAPEE QR code image saved!', 'success');
 }
 
 /* ==========================================================================
@@ -638,22 +671,28 @@ function shareViaWhatsApp() {
   const curr = appSettings.currency;
   const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
 
-  const itemsSummary = order.items.map(i => `• ${i.name} (x${i.qty})`).join('\n');
+  const itemsSummary = order.items.map(i => {
+    let s = `• ${i.name} (x${i.qty}) - ${curr}${i.price.toFixed(2)}`;
+    if (i.imei1) s += ` [IMEI: ${i.imei1}]`;
+    return s;
+  }).join('\n');
 
-  const text = `*Virtual Receipt from ${appSettings.name}*\n` +
+  const text = `*SWAPEE Digital Receipt (Invoice)*\n` +
+    `4 South Clerk Street, Edinburgh EH8 9JE\n` +
+    `Tel: +44 131 662 9955\n` +
     `--------------------------------\n` +
     `*Receipt No:* ${order.id}\n` +
-    `*Customer:* ${order.customer.name}\n` +
-    `*Date:* ${formatReceiptDate(order.date)}\n` +
-    `*Status:* ${order.payment.status.toUpperCase()}\n\n` +
+    `*Date:* ${formatUKDate(order.date)}\n` +
+    `*Cashier:* ${order.cashier || 'ASHA'}\n` +
+    `*Customer:* ${order.customer.name} (No: ${order.customer.customerNo || 'N/A'})\n\n` +
     `*Purchased Items:*\n${itemsSummary}\n\n` +
-    `*Grand Total:* ${curr}${order.pricing.grandTotal.toFixed(2)}\n` +
+    `*Total Paid:* ${curr}${order.pricing.grandTotal.toFixed(2)}\n` +
+    `*Payment Method:* ${order.payment.method} (${order.payment.acct || '****'})\n` +
     `--------------------------------\n` +
-    `*Verify & View Digital Receipt Online:*\n` +
+    `*Verify & View Digital Receipt with QR:*\n` +
     `${receiptUrl}\n\n` +
-    `Thank you for shopping with us!`;
+    `Thank you for choosing SWAPEE!`;
 
-  // Clean phone number (remove spaces, dashes)
   const phone = (order.customer.phone || '').replace(/[^0-9]/g, '');
   const waUrl = phone
     ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
@@ -667,18 +706,17 @@ function copyReceiptLink() {
   const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(currentViewingOrder.id)}`;
 
   navigator.clipboard.writeText(receiptUrl).then(() => {
-    showToast('Direct receipt link copied to clipboard!', 'success');
+    showToast('Receipt link copied to clipboard!', 'success');
   }).catch(() => {
-    prompt('Copy receipt link:', receiptUrl);
+    prompt('Receipt link:', receiptUrl);
   });
 }
 
 /* ==========================================================================
-   QR SCANNER ENGINE (HTML5-QRCODE)
+   QR SCANNER ENGINE
    ========================================================================== */
 
 function startQRScanner() {
-  const qrReaderDiv = document.getElementById('qr-reader');
   const placeholder = document.getElementById('scanner-placeholder');
   const laserBar = document.getElementById('scanner-laser-bar');
   const startBtn = document.getElementById('btn-start-scanner');
@@ -701,17 +739,17 @@ function startQRScanner() {
     { facingMode: 'environment' },
     config,
     onQRCodeScanSuccess,
-    onQRCodeScanError
+    () => {}
   ).then(() => {
     currentScannerRunning = true;
     startBtn.classList.add('hidden');
     stopBtn.classList.remove('hidden');
-    showToast('Camera active. Point at receipt QR code.', 'info');
+    showToast('SWAPEE camera scanner active', 'info');
   }).catch(err => {
     console.error('Failed to start camera:', err);
     placeholder.classList.remove('hidden');
     laserBar.classList.add('hidden');
-    showToast('Could not access camera. Check browser permissions or upload an image file.', 'error');
+    showToast('Could not access camera. Try uploading an image file instead.', 'error');
   });
 }
 
@@ -728,18 +766,9 @@ function stopQRScanner() {
 }
 
 function onQRCodeScanSuccess(decodedText) {
-  // Beep feedback
   playSuccessBeep();
-
-  // Stop scanner to avoid multiple triggers
   stopQRScanner();
-
-  // Process the scanned text
   processScannedPayload(decodedText);
-}
-
-function onQRCodeScanError(errorMessage) {
-  // Silent scan frame tick
 }
 
 function handleQRImageUpload(e) {
@@ -750,7 +779,7 @@ function handleQRImageUpload(e) {
     html5QrScannerInstance = new Html5Qrcode('qr-reader');
   }
 
-  showToast('Analyzing QR code image...', 'info');
+  showToast('Scanning QR code from image...', 'info');
 
   html5QrScannerInstance.scanFile(file, true)
     .then(decodedText => {
@@ -759,10 +788,9 @@ function handleQRImageUpload(e) {
     })
     .catch(err => {
       console.error('Failed to decode image', err);
-      showToast('Could not find a valid QR code in this image. Try another photo.', 'error');
+      showToast('No valid QR code detected in this photo.', 'error');
     });
 
-  // Reset file input
   e.target.value = '';
 }
 
@@ -770,7 +798,7 @@ function handleManualLookup() {
   const input = document.getElementById('manual-receipt-id');
   const code = input.value.trim().toUpperCase();
   if (!code) {
-    showToast('Please enter a Receipt # to verify', 'error');
+    showToast('Please enter a Receipt #', 'error');
     return;
   }
   processScannedPayload(code);
@@ -780,20 +808,16 @@ function processScannedPayload(payload) {
   const feedback = document.getElementById('scan-feedback');
   const feedbackText = document.getElementById('scan-feedback-text');
 
-  let targetId = null;
+  let targetId = '';
 
-  // Case 1: Scanned a URL containing ?receipt=...
   if (payload.includes('receipt=')) {
     try {
       const url = new URL(payload);
-      targetId = url.searchParams.get('receipt');
+      targetId = url.searchParams.get('receipt') || '';
     } catch {
       const match = payload.match(/receipt=([^&]+)/);
       if (match) targetId = decodeURIComponent(match[1]);
     }
-  } else if (payload.startsWith('REC-')) {
-    // Case 2: Direct Receipt ID
-    targetId = payload;
   } else {
     targetId = payload.trim();
   }
@@ -803,24 +827,22 @@ function processScannedPayload(payload) {
   if (foundOrder) {
     feedback.classList.remove('hidden', 'bg-rose-50', 'border-rose-200', 'text-rose-800');
     feedback.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
-    feedbackText.innerHTML = `<strong>Receipt Found:</strong> ${foundOrder.id} for <strong>${foundOrder.customer.name}</strong>`;
+    feedbackText.innerHTML = `<strong>Receipt Verified:</strong> ${foundOrder.id} for <strong>${foundOrder.customer.name}</strong>`;
+    showToast(`SWAPEE Receipt ${foundOrder.id} verified!`, 'success');
 
-    showToast(`Verified: Receipt ${foundOrder.id} found!`, 'success');
-
-    // Open receipt modal after brief visual delay
     setTimeout(() => {
       openReceiptModal(foundOrder);
-    }, 700);
+    }, 600);
   } else {
     feedback.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
     feedback.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
-    feedbackText.innerHTML = `No matching receipt found for "<strong>${escapeHTML(targetId)}</strong>". Verify the code and try again.`;
-    showToast(`Receipt ${targetId} not found in database`, 'error');
+    feedbackText.innerHTML = `No SWAPEE receipt found for "<strong>${escapeHTML(targetId)}</strong>".`;
+    showToast(`Receipt ${targetId} not found`, 'error');
   }
 }
 
 /* ==========================================================================
-   ORDERS HISTORY & DIRECTORY
+   ORDERS DIRECTORY & HISTORY
    ========================================================================== */
 
 function renderOrdersHistory() {
@@ -833,24 +855,23 @@ function renderOrdersHistory() {
 
   if (navBadge) navBadge.textContent = orders.length;
 
-  // Filter orders
   const filtered = orders.filter(order => {
-    // Status Filter
-    if (statusFilter !== 'ALL' && order.payment.status !== statusFilter) {
-      return false;
-    }
-    // Search Query
+    if (statusFilter !== 'ALL' && order.payment.status !== statusFilter) return false;
     if (search) {
       const inId = order.id.toLowerCase().includes(search);
-      const inCust = order.customer.name.toLowerCase().includes(search);
-      const inPhone = (order.customer.phone || '').toLowerCase().includes(search);
-      const inItems = order.items.some(i => i.name.toLowerCase().includes(search) || (i.sku && i.sku.toLowerCase().includes(search)));
-      return inId || inCust || inPhone || inItems;
+      const inCust = (order.customer.name || '').toLowerCase().includes(search);
+      const inItems = order.items.some(i => 
+        i.name.toLowerCase().includes(search) || 
+        (i.imei1 && i.imei1.toLowerCase().includes(search)) ||
+        (i.sn && i.sn.toLowerCase().includes(search)) ||
+        (i.sku && i.sku.toLowerCase().includes(search))
+      );
+      return inId || inCust || inItems;
     }
     return true;
   });
 
-  if (countBadge) countBadge.textContent = `${filtered.length} of ${orders.length} receipts`;
+  if (countBadge) countBadge.textContent = `${filtered.length} of ${orders.length} records`;
 
   if (filtered.length === 0) {
     tbody.innerHTML = '';
@@ -865,51 +886,47 @@ function renderOrdersHistory() {
 
   filtered.forEach(order => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50/80 transition group';
+    tr.className = 'hover:bg-slate-50 transition font-thermal text-xs';
 
     const itemsSummary = order.items.map(i => `${i.name} (x${i.qty})`).join(', ');
-    const itemsTooltip = escapeHTML(itemsSummary);
-
-    let statusClass = 'bg-slate-100 text-slate-700';
-    if (order.payment.status === 'Paid') statusClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-    else if (order.payment.status === 'Pending') statusClass = 'bg-amber-50 text-amber-700 border border-amber-200';
-    else if (order.payment.status === 'Cash on Delivery') statusClass = 'bg-purple-50 text-purple-700 border border-purple-200';
 
     tr.innerHTML = `
-      <td class="py-3.5 px-4 font-mono font-bold text-brand-600">
-        <button onclick="handleViewReceiptById('${order.id}')" class="hover:underline flex items-center gap-1.5">
-          <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+      <td class="py-3.5 px-4 font-bold text-slate-900">
+        <button onclick="handleViewReceiptById('${order.id}')" class="hover:underline flex items-center gap-1.5 font-bold">
+          <i data-lucide="receipt" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>${order.id}</span>
         </button>
       </td>
       <td class="py-3.5 px-4 text-slate-500 whitespace-nowrap">
-        ${formatShortDate(order.date)}
+        ${formatUKDate(order.date)}
       </td>
-      <td class="py-3.5 px-4">
-        <p class="font-bold text-slate-900">${escapeHTML(order.customer.name)}</p>
-        <p class="text-[11px] text-slate-500 font-mono">${escapeHTML(order.customer.phone || 'No phone')}</p>
+      <td class="py-3.5 px-4 font-bold text-slate-900 uppercase">
+        ${escapeHTML(order.customer.name)}
+        <span class="block text-[10px] font-normal text-slate-400 font-mono">No: ${escapeHTML(order.customer.customerNo || 'N/A')}</span>
       </td>
-      <td class="py-3.5 px-4 max-w-xs truncate text-slate-600" title="${itemsTooltip}">
-        <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[10px] mr-1">${order.items.length} item${order.items.length > 1 ? 's' : ''}</span>
+      <td class="py-3.5 px-4 max-w-xs truncate text-slate-700">
+        <span class="inline-block px-1.5 py-0.2 rounded bg-slate-200 text-slate-800 font-bold text-[10px] mr-1">${order.items.length} item${order.items.length > 1 ? 's' : ''}</span>
         ${escapeHTML(itemsSummary)}
       </td>
-      <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
+      <td class="py-3.5 px-4 text-right font-bold text-slate-900">
         ${curr}${order.pricing.grandTotal.toFixed(2)}
       </td>
       <td class="py-3.5 px-4 text-center">
-        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}">
+        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+          order.payment.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+        }">
           ${order.payment.status}
         </span>
       </td>
       <td class="py-3.5 px-4 text-center">
         <div class="inline-flex items-center gap-1">
-          <button onclick="handleViewReceiptById('${order.id}')" title="View Virtual Receipt & QR" class="p-1.5 rounded-lg text-slate-500 hover:text-brand-600 hover:bg-brand-50 transition">
+          <button onclick="handleViewReceiptById('${order.id}')" title="View SWAPEE Receipt" class="p-1.5 rounded text-slate-600 hover:text-black hover:bg-slate-200 transition">
             <i data-lucide="eye" class="w-4 h-4"></i>
           </button>
-          <button onclick="handleWhatsAppDirect('${order.id}')" title="Send Receipt on WhatsApp" class="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition">
+          <button onclick="handleWhatsAppDirect('${order.id}')" title="Send WhatsApp" class="p-1.5 rounded text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition">
             <i data-lucide="message-square" class="w-4 h-4"></i>
           </button>
-          <button onclick="deleteOrderRecord('${order.id}')" title="Delete Receipt" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+          <button onclick="deleteOrderRecord('${order.id}')" title="Delete" class="p-1.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
             <i data-lucide="trash" class="w-4 h-4"></i>
           </button>
         </div>
@@ -923,11 +940,8 @@ function renderOrdersHistory() {
 
 function handleViewReceiptById(orderId) {
   const order = orders.find(o => o.id === orderId);
-  if (order) {
-    openReceiptModal(order);
-  } else {
-    showToast(`Order ${orderId} not found`, 'error');
-  }
+  if (order) openReceiptModal(order);
+  else showToast(`Receipt ${orderId} not found`, 'error');
 }
 
 function handleWhatsAppDirect(orderId) {
@@ -939,9 +953,9 @@ function handleWhatsAppDirect(orderId) {
 }
 
 function deleteOrderRecord(orderId) {
-  if (confirm(`Are you sure you want to delete receipt ${orderId}? This cannot be undone.`)) {
-    const updated = orders.filter(o => o.id !== orderId);
-    saveOrders(updated);
+  if (confirm(`Delete receipt ${orderId}?`)) {
+    orders = orders.filter(o => o.id !== orderId);
+    saveOrders(orders);
     showToast(`Receipt ${orderId} deleted`, 'info');
   }
 }
@@ -952,7 +966,6 @@ function deleteOrderRecord(orderId) {
 
 function updateDashboardStats() {
   const curr = appSettings.currency;
-
   let totalRev = 0;
   let todayRev = 0;
   let pendingCount = 0;
@@ -962,13 +975,11 @@ function updateDashboardStats() {
 
   orders.forEach(order => {
     totalRev += order.pricing.grandTotal || 0;
-
     const orderDay = (order.date || '').slice(0, 10);
     if (orderDay === todayStr) {
       todayRev += order.pricing.grandTotal || 0;
       todayOrdersCount++;
     }
-
     if (order.payment.status === 'Pending' || order.payment.status === 'Cash on Delivery') {
       pendingCount++;
     }
@@ -986,13 +997,8 @@ function renderRecentDashboardOrders() {
   if (!container) return;
 
   const recent = orders.slice(0, 4);
-
   if (recent.length === 0) {
-    container.innerHTML = `
-      <div class="text-center py-8 text-slate-400 text-xs">
-        No sales recorded yet. Click "Create Receipt" to add your first sale!
-      </div>
-    `;
+    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs font-mono">No receipts issued yet.</div>`;
     return;
   }
 
@@ -1001,25 +1007,25 @@ function renderRecentDashboardOrders() {
 
   recent.forEach(order => {
     const div = document.createElement('div');
-    div.className = 'flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/70 transition shadow-xs';
+    div.className = 'flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition';
     div.innerHTML = `
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-xs shrink-0">
-          <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+        <div class="w-10 h-10 rounded-full overflow-hidden bg-black p-0.5 shrink-0">
+          <img src="logo.svg" alt="SWAPEE Logo" class="w-full h-full object-contain" />
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-bold text-slate-900 text-sm">${escapeHTML(order.customer.name)}</span>
-            <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${order.id}</span>
+            <span class="font-bold text-slate-900 text-sm uppercase font-thermal">${escapeHTML(order.customer.name)}</span>
+            <span class="text-[10px] font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">${order.id}</span>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">
-            ${order.items.length} item${order.items.length > 1 ? 's' : ''} • ${formatShortDate(order.date)}
+          <p class="text-xs text-slate-500 font-mono mt-0.5">
+            ${order.items.length} item${order.items.length > 1 ? 's' : ''} • ${formatUKDate(order.date)}
           </p>
         </div>
       </div>
       <div class="text-right">
-        <p class="font-mono font-bold text-slate-900 text-sm">${curr}${order.pricing.grandTotal.toFixed(2)}</p>
-        <button onclick="handleViewReceiptById('${order.id}')" class="text-[11px] font-semibold text-brand-600 hover:text-brand-800 hover:underline">
+        <p class="font-mono font-black text-slate-900 text-sm">${curr}${order.pricing.grandTotal.toFixed(2)}</p>
+        <button onclick="handleViewReceiptById('${order.id}')" class="text-[11px] font-bold text-slate-900 hover:underline">
           View Receipt →
         </button>
       </div>
@@ -1037,9 +1043,10 @@ function renderRecentDashboardOrders() {
 function openSettingsModal() {
   document.getElementById('setting-store-name').value = appSettings.name;
   document.getElementById('setting-store-tagline').value = appSettings.tagline;
+  document.getElementById('setting-vat').value = appSettings.vatNo;
+  document.getElementById('setting-company-no').value = appSettings.companyNo;
   document.getElementById('setting-currency').value = appSettings.currency;
   document.getElementById('setting-phone').value = appSettings.phone;
-  document.getElementById('setting-email').value = appSettings.email;
   document.getElementById('setting-address').value = appSettings.address;
   document.getElementById('setting-footer').value = appSettings.footer;
 
@@ -1053,13 +1060,15 @@ function closeSettingsModal() {
 function handleSaveSettings(e) {
   e.preventDefault();
   const updated = {
-    name: document.getElementById('setting-store-name').value.trim(),
-    tagline: document.getElementById('setting-store-tagline').value.trim(),
-    currency: document.getElementById('setting-currency').value.trim() || '$',
+    name: document.getElementById('setting-store-name').value.trim() || 'SWAPEE',
+    tagline: document.getElementById('setting-store-tagline').value.trim() || 'SINCE 2002',
+    vatNo: document.getElementById('setting-vat').value.trim(),
+    companyNo: document.getElementById('setting-company-no').value.trim(),
+    currency: document.getElementById('setting-currency').value.trim() || '£',
     phone: document.getElementById('setting-phone').value.trim(),
-    email: document.getElementById('setting-email').value.trim(),
     address: document.getElementById('setting-address').value.trim(),
-    footer: document.getElementById('setting-footer').value.trim()
+    footer: document.getElementById('setting-footer').value.trim(),
+    taxRate: 20
   };
 
   saveSettings(updated);
@@ -1068,22 +1077,10 @@ function handleSaveSettings(e) {
 
 function applySettingsToUI() {
   document.getElementById('nav-shop-name').textContent = appSettings.name;
-  document.getElementById('quick-store-name').textContent = appSettings.name;
-  document.getElementById('quick-store-currency').textContent = `${appSettings.currency}`;
-  document.getElementById('quick-store-phone').textContent = appSettings.phone;
-}
-
-function loadSampleDemoData() {
-  if (confirm('Load fresh demo sales & orders? Existing list will be updated with sample orders.')) {
-    const samples = getInitialSampleOrders();
-    saveOrders(samples);
-    showToast('Demo data loaded successfully!', 'success');
-    closeSettingsModal();
-  }
 }
 
 /* ==========================================================================
-   EXPORT, BACKUP & RESTORE
+   EXPORTS & BACKUP
    ========================================================================== */
 
 function exportOrdersToCSV() {
@@ -1092,29 +1089,22 @@ function exportOrdersToCSV() {
     return;
   }
 
-  const headers = ['Receipt No', 'Date', 'Customer Name', 'Phone', 'Email', 'Address', 'Products Sold', 'Payment Method', 'Payment Status', 'Subtotal', 'Discount', 'Tax', 'Shipping', 'Grand Total', 'Warranty', 'Notes'];
-  
+  const headers = ['Receipt No', 'Date', 'Cashier', 'Customer Name', 'Customer No', 'Address', 'Products & Serials', 'Payment Method', 'Card Acct', 'Total (£)'];
   const csvRows = [headers.join(',')];
 
   orders.forEach(o => {
-    const itemsSummary = o.items.map(i => `${i.name} (x${i.qty} @ ${i.price})`).join('; ');
+    const itemsSummary = o.items.map(i => `${i.name} (x${i.qty})${i.imei1 ? ' [IMEI:'+i.imei1+']' : ''}`).join('; ');
     const row = [
       `"${o.id}"`,
       `"${o.date}"`,
+      `"${cleanCSV(o.cashier || 'ASHA')}"`,
       `"${cleanCSV(o.customer.name)}"`,
-      `"${cleanCSV(o.customer.phone)}"`,
-      `"${cleanCSV(o.customer.email)}"`,
-      `"${cleanCSV(o.customer.address)}"`,
+      `"${cleanCSV(o.customer.customerNo || '')}"`,
+      `"${cleanCSV(o.customer.address || '')}"`,
       `"${cleanCSV(itemsSummary)}"`,
       `"${o.payment.method}"`,
-      `"${o.payment.status}"`,
-      o.pricing.subtotal.toFixed(2),
-      o.pricing.discount.toFixed(2),
-      o.pricing.taxAmount.toFixed(2),
-      o.pricing.shipping.toFixed(2),
-      o.pricing.grandTotal.toFixed(2),
-      `"${cleanCSV(o.warranty)}"`,
-      `"${cleanCSV(o.notes)}"`
+      `"${o.payment.acct || ''}"`,
+      o.pricing.grandTotal.toFixed(2)
     ];
     csvRows.push(row.join(','));
   });
@@ -1123,11 +1113,11 @@ function exportOrdersToCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `receipts_export_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `SWAPEE_receipts_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  showToast('Orders exported to CSV!', 'success');
+  showToast('SWAPEE receipts exported to CSV!', 'success');
 }
 
 function cleanCSV(str) {
@@ -1145,11 +1135,11 @@ function backupOrdersJSON() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `shopreceipt_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `SWAPEE_backup_${new Date().toISOString().slice(0, 10)}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  showToast('Complete backup downloaded!', 'success');
+  showToast('SWAPEE database backup downloaded!', 'success');
 }
 
 function restoreOrdersJSON(e) {
@@ -1162,16 +1152,13 @@ function restoreOrdersJSON(e) {
       const data = JSON.parse(event.target.result);
       if (data.orders && Array.isArray(data.orders)) {
         saveOrders(data.orders);
-        if (data.settings) {
-          saveSettings(data.settings);
-        }
-        showToast(`Successfully restored ${data.orders.length} orders!`, 'success');
+        if (data.settings) saveSettings(data.settings);
+        showToast(`Restored ${data.orders.length} SWAPEE receipts!`, 'success');
       } else {
         showToast('Invalid backup file format.', 'error');
       }
     } catch (err) {
-      console.error(err);
-      showToast('Error parsing backup file.', 'error');
+      showToast('Error parsing file.', 'error');
     }
   };
   reader.readAsText(file);
@@ -1179,7 +1166,7 @@ function restoreOrdersJSON(e) {
 }
 
 /* ==========================================================================
-   URL DEEP-LINKING & ROUTING
+   ROUTING & UTILITIES
    ========================================================================== */
 
 function handleDeepLink() {
@@ -1190,41 +1177,23 @@ function handleDeepLink() {
     const match = orders.find(o => o.id.toUpperCase() === receiptId.toUpperCase());
     if (match) {
       openReceiptModal(match);
-      showToast(`Opening Verified Receipt: ${match.id}`, 'info');
+      showToast(`Verified SWAPEE Receipt: ${match.id}`, 'info');
     } else {
       showToast(`Receipt ${receiptId} could not be located`, 'error');
     }
   }
 }
 
-/* ==========================================================================
-   UTILITY HELPERS
-   ========================================================================== */
-
-function formatReceiptDate(isoString) {
+/**
+ * Format date in UK thermal style (DD/MM/YYYY)
+ */
+function formatUKDate(isoString) {
   try {
-    const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch {
-    return isoString;
-  }
-}
-
-function formatShortDate(isoString) {
-  try {
-    const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const d = new Date(isoString);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   } catch {
     return isoString;
   }
@@ -1255,16 +1224,14 @@ function playSuccessBeep() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
     gain.gain.setValueAtTime(0.15, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
     osc.stop(ctx.currentTime + 0.2);
-  } catch (e) {
-    // AudioContext might be blocked before first user gesture
-  }
+  } catch (e) {}
 }
 
 function showToast(message, type = 'info') {
@@ -1272,10 +1239,10 @@ function showToast(message, type = 'info') {
   if (!container) return;
 
   const toast = document.createElement('div');
-  toast.className = `p-3.5 px-4 rounded-2xl shadow-xl border text-xs font-semibold flex items-center gap-2.5 transition transform duration-200 pointer-events-auto animate-in slide-in-from-bottom-2 ${
-    type === 'success' ? 'bg-slate-900 text-emerald-400 border-slate-800' :
+  toast.className = `p-3.5 px-4 rounded-xl shadow-xl border text-xs font-bold font-thermal flex items-center gap-2.5 transition transform duration-200 pointer-events-auto ${
+    type === 'success' ? 'bg-black text-emerald-400 border-slate-800' :
     type === 'error' ? 'bg-rose-950 text-rose-200 border-rose-800' :
-    'bg-slate-900 text-slate-100 border-slate-800'
+    'bg-black text-white border-slate-800'
   }`;
 
   const iconName = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-triangle' : 'info';
