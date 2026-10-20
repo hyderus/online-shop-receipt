@@ -169,6 +169,7 @@ function getInitialSampleOrders() {
    ========================================================================== */
 
 function switchTab(tabId) {
+  if (isCustomerVerificationMode) return;
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
 
   const activeTab = document.getElementById(`tab-${tabId}`);
@@ -815,6 +816,7 @@ function handleCreateReceipt(e) {
    ========================================================================== */
 
 function openReceiptModal(order) {
+  if (isCustomerVerificationMode) return;
   currentViewingOrder = order;
   const curr = appSettings.currency;
 
@@ -948,14 +950,29 @@ function generateReceiptQRCode(order) {
   const qrContainer = document.getElementById('receipt-qrcode-canvas');
   qrContainer.innerHTML = '';
 
-  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
+  const compactPayload = {
+    id: order.id,
+    c: order.customer.name,
+    cn: order.customer.customerNo,
+    a: order.customer.address,
+    t: order.pricing.grandTotal,
+    dt: order.date,
+    ca: order.cashier,
+    itm: order.items.map(i => ({ n: i.name, q: i.qty, p: i.price, i1: i.imei1, i2: i.imei2, sn: i.sn, sku: i.sku }))
+  };
+  let dParam = '';
+  try {
+    dParam = '&d=' + encodeURIComponent(btoa(JSON.stringify(compactPayload)));
+  } catch (e) {}
+
+  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}${dParam}`;
 
   try {
-    // Generate at 320x320 high resolution for crisp, sharp thermal output
+    // Generate at 220x220, scaled down by 50% via CSS (85px), sharp dot matrix
     new QRCode(qrContainer, {
       text: receiptUrl,
-      width: 320,
-      height: 320,
+      width: 220,
+      height: 220,
       colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
@@ -1393,6 +1410,7 @@ function renderRecentDashboardOrders() {
    ========================================================================== */
 
 function openSettingsModal() {
+  if (isCustomerVerificationMode) return;
   document.getElementById('setting-store-name').value = appSettings.name;
   document.getElementById('setting-store-tagline').value = appSettings.tagline;
   document.getElementById('setting-vat').value = appSettings.vatNo;
@@ -1521,19 +1539,143 @@ function restoreOrdersJSON(e) {
    ROUTING & UTILITIES
    ========================================================================== */
 
+let isCustomerVerificationMode = false;
+
 function handleDeepLink() {
   const params = new URLSearchParams(window.location.search);
   const receiptId = params.get('receipt');
 
   if (receiptId) {
-    const match = orders.find(o => o.id.toUpperCase() === receiptId.toUpperCase());
-    if (match) {
-      openReceiptModal(match);
-      showToast(`Verified SWAPEE Receipt: ${match.id}`, 'info');
-    } else {
-      showToast(`Receipt ${receiptId} could not be located`, 'error');
+    let match = orders.find(o => o.id.toUpperCase() === receiptId.toUpperCase());
+
+    // Check if encoded payload &d= exists in URL for universal offline verification
+    const encodedData = params.get('d');
+    if (encodedData && !match) {
+      try {
+        const decoded = JSON.parse(atob(decodeURIComponent(encodedData)));
+        if (decoded && decoded.id) {
+          match = {
+            id: decoded.id,
+            date: decoded.dt || new Date().toISOString(),
+            cashier: decoded.ca || 'ASHA',
+            customer: {
+              name: decoded.c || 'CUSTOMER',
+              customerNo: decoded.cn || 'N/A',
+              address: decoded.a || 'Edinburgh'
+            },
+            items: (decoded.itm || []).map(i => ({
+              name: i.n,
+              qty: i.q || 1,
+              price: i.p || 0,
+              total: (i.q || 1) * (i.p || 0),
+              imei1: i.i1 || '',
+              imei2: i.i2 || '',
+              sn: i.sn || '',
+              sku: i.sku || ''
+            })),
+            pricing: {
+              grandTotal: decoded.t || 0,
+              subtotal: decoded.t || 0,
+              discount: 0,
+              taxRate: 20,
+              taxAmount: (decoded.t || 0) * 0.2
+            },
+            payment: {
+              method: 'VISA',
+              status: 'Paid'
+            }
+          };
+          orders.unshift(match);
+          saveOrders(orders);
+        }
+      } catch (e) {
+        console.warn('Could not parse encoded data', e);
+      }
+    }
+
+    // Enter Strict Customer Verification Mode (No redirects, no link editing, no browsing other pages)
+    enterCustomerVerificationMode(match, receiptId);
+  }
+}
+
+function enterCustomerVerificationMode(order, requestedId) {
+  isCustomerVerificationMode = true;
+
+  // Add lockdown class to body (completely hides header, main, modals)
+  document.body.classList.add('verification-mode');
+
+  // Prevent back navigation or escaping to admin
+  window.history.pushState(null, '', window.location.href);
+  window.addEventListener('popstate', () => {
+    window.history.pushState(null, '', window.location.href);
+  });
+
+  // Block admin functions
+  window.switchTab = () => false;
+  window.openSettingsModal = () => false;
+  window.openReceiptModal = () => false;
+  window.resetSaleForm = () => false;
+  window.wipeAndResetAllData = () => false;
+
+  const portal = document.getElementById('customer-verification-portal');
+  if (!portal) return;
+
+  portal.classList.remove('hidden');
+
+  const curr = appSettings.currency;
+
+  if (order) {
+    document.getElementById('verify-receipt-id').textContent = order.id;
+    document.getElementById('verify-receipt-date').textContent = formatUKDate(order.date);
+    document.getElementById('verify-receipt-cust').textContent = order.customer.name || 'ASHER';
+    document.getElementById('verify-receipt-total').textContent = `${curr}${order.pricing.grandTotal.toFixed(2)}`;
+    
+    // Generate verified QR code in portal
+    const qrTarget = document.getElementById('verified-portal-qrcode');
+    if (qrTarget) {
+      qrTarget.innerHTML = '';
+      try {
+        new QRCode(qrTarget, {
+          text: window.location.href,
+          width: 170,
+          height: 170,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        setTimeout(() => {
+          const c = qrTarget.querySelector('canvas');
+          const im = qrTarget.querySelector('img');
+          if (c && im) c.style.display = 'none';
+        }, 50);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  } else {
+    document.getElementById('verify-receipt-id').textContent = requestedId || 'UNKNOWN';
+    document.getElementById('verify-receipt-date').textContent = 'N/A';
+    document.getElementById('verify-receipt-cust').textContent = 'N/A';
+    document.getElementById('verify-receipt-total').textContent = '£0.00';
+    const statusSpan = portal.querySelector('.verify-status-badge');
+    if (statusSpan) {
+      statusSpan.className = 'px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold text-[10px] uppercase tracking-wider';
+      statusSpan.textContent = 'RECORD NOT FOUND';
+    }
+    const banner = portal.querySelector('.verify-green-banner');
+    if (banner) {
+      banner.className = 'bg-rose-600 text-white p-5 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-2 border-2 border-rose-400';
+      banner.innerHTML = `
+        <div class="w-14 h-14 rounded-full bg-white text-rose-600 flex items-center justify-center font-black shadow-lg">
+          <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">Invoice Not Found</h1>
+        <p class="text-xs font-semibold text-rose-100 uppercase tracking-widest">Unverified Reference: ${escapeHTML(requestedId)}</p>
+      `;
     }
   }
+
+  if (window.lucide) lucide.createIcons();
 }
 
 /**
