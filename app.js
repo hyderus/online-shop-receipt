@@ -385,55 +385,55 @@ function addProductItemRow(
     </div>
 
     <!-- ============================================== -->
-    <!-- SELECTABLE FIELDS SELECTION CONTROL BAR        -->
+    <!-- SELECTABLE FIELDS SELECTION CONTROL BAR (ONE LINE) -->
     <!-- ============================================== -->
     <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
+      <div class="flex flex-nowrap items-center justify-between gap-2 overflow-x-auto whitespace-nowrap">
+        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-800 shrink-0">
           <i data-lucide="check-square" class="w-3.5 h-3.5 text-slate-900"></i>
-          <span>Select Identifiers to Include on Receipt:</span>
+          <span>Select Fields to Include:</span>
         </div>
 
-        <!-- 1-Click Template Selector Buttons -->
-        <div class="flex flex-wrap items-center gap-1 text-[10px] font-mono font-semibold">
-          <button type="button" onclick="applyPresetToRow(this, 'dual-imei')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">📱 Dual IMEI + S/N</button>
-          <button type="button" onclick="applyPresetToRow(this, 'single-imei')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">📱 1 IMEI + S/N</button>
-          <button type="button" onclick="applyPresetToRow(this, 'accessory')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">🔌 SKU Only</button>
-          <button type="button" onclick="applyPresetToRow(this, 'all')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300">All 4</button>
+        <!-- 1-Click Template Selector Buttons (In One Line) -->
+        <div class="flex flex-nowrap items-center gap-1 text-[10px] font-mono font-semibold shrink-0">
+          <button type="button" onclick="applyPresetToRow(this, 'dual-imei')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300 whitespace-nowrap">📱 Dual IMEI + S/N</button>
+          <button type="button" onclick="applyPresetToRow(this, 'single-imei')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300 whitespace-nowrap">📱 1 IMEI + S/N</button>
+          <button type="button" onclick="applyPresetToRow(this, 'accessory')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300 whitespace-nowrap">🔌 SKU Only</button>
+          <button type="button" onclick="applyPresetToRow(this, 'all')" class="px-2 py-0.5 rounded bg-white hover:bg-slate-200 text-slate-800 border border-slate-300 whitespace-nowrap">All 4</button>
         </div>
       </div>
 
-      <!-- Selectable Checkboxes with Badges -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-200/60">
+      <!-- Selectable Checkboxes (Strictly in One Line) -->
+      <div class="flex flex-nowrap items-center gap-2 pt-1 border-t border-slate-200/60 overflow-x-auto whitespace-nowrap">
         <!-- Selectable IMEI 1 -->
-        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasImei1 ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+        <label class="flex-1 min-w-[95px] flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border cursor-pointer select-none transition shrink-0 ${hasImei1 ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
           <input type="checkbox" class="toggle-imei1 rounded border-slate-300 text-slate-900 focus:ring-0" ${hasImei1 ? 'checked' : ''} onchange="toggleIdentifierField(this, 'imei1')">
           <span class="text-xs font-mono">IMEI 1</span>
         </label>
 
         <!-- Selectable IMEI 2 -->
-        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasImei2 ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+        <label class="flex-1 min-w-[95px] flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border cursor-pointer select-none transition shrink-0 ${hasImei2 ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
           <input type="checkbox" class="toggle-imei2 rounded border-slate-300 text-slate-900 focus:ring-0" ${hasImei2 ? 'checked' : ''} onchange="toggleIdentifierField(this, 'imei2')">
           <span class="text-xs font-mono">IMEI 2</span>
         </label>
 
         <!-- Selectable Serial Number (S/N) -->
-        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasSn ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+        <label class="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border cursor-pointer select-none transition shrink-0 ${hasSn ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
           <input type="checkbox" class="toggle-sn rounded border-slate-300 text-slate-900 focus:ring-0" ${hasSn ? 'checked' : ''} onchange="toggleIdentifierField(this, 'sn')">
           <span class="text-xs font-mono">Serial (S/N)</span>
         </label>
 
         <!-- Selectable SKU -->
-        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition ${hasSku ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
+        <label class="flex-1 min-w-[95px] flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border cursor-pointer select-none transition shrink-0 ${hasSku ? 'bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-500'}">
           <input type="checkbox" class="toggle-sku rounded border-slate-300 text-slate-900 focus:ring-0" ${hasSku ? 'checked' : ''} onchange="toggleIdentifierField(this, 'sku')">
           <span class="text-xs font-mono">SKU Code</span>
         </label>
       </div>
 
       <!-- ============================================== -->
-      <!-- ACTIVE INPUT FIELDS CONTAINER                 -->
+      <!-- ACTIVE INPUT FIELDS CONTAINER (IN ONE LINE GRID)-->
       <!-- ============================================== -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
         
         <!-- Field 1: IMEI 1 -->
         <div class="field-container-imei1 ${hasImei1 ? '' : 'hidden'} bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
@@ -510,12 +510,14 @@ function toggleIdentifierField(checkbox, fieldKey) {
 
   if (checkbox.checked) {
     container.classList.remove('hidden');
-    label.className = 'flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition bg-indigo-50/60 border-indigo-300 text-indigo-900 font-bold';
+    label.classList.add('bg-indigo-50/60', 'border-indigo-300', 'text-indigo-900', 'font-bold');
+    label.classList.remove('bg-white', 'border-slate-200', 'text-slate-500');
     const input = container.querySelector('input');
     if (input) input.focus();
   } else {
     container.classList.add('hidden');
-    label.className = 'flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none transition bg-white border-slate-200 text-slate-500';
+    label.classList.remove('bg-indigo-50/60', 'border-indigo-300', 'text-indigo-900', 'font-bold');
+    label.classList.add('bg-white', 'border-slate-200', 'text-slate-500');
   }
 }
 
@@ -842,11 +844,11 @@ function openReceiptModal(order) {
 
     itemBlock.innerHTML = `
       <div class="flex justify-between items-baseline font-black text-sm sm:text-base">
-        <span>${escapeHTML(item.name)}</span>
-        <span>${curr}${item.price.toFixed(2)}</span>
-      </div>
-      <div class="text-xs text-black font-bold">
-        (x${item.qty})
+        <div class="flex items-baseline gap-1.5 min-w-0 pr-2">
+          <span>${escapeHTML(item.name)}</span>
+          <span class="text-xs font-bold text-black shrink-0">(x${item.qty})</span>
+        </div>
+        <span class="shrink-0 whitespace-nowrap ml-2">${curr}${item.price.toFixed(2)}</span>
       </div>
       ${detailsHtml ? `<div class="text-xs pl-2 font-mono font-bold space-y-0.5">${detailsHtml}</div>` : ''}
     `;
@@ -1253,8 +1255,8 @@ function renderOrdersHistory() {
           ${order.payment.status}
         </span>
       </td>
-      <td class="py-3.5 px-4 text-center">
-        <div class="inline-flex items-center gap-1.5">
+      <td class="py-3.5 px-4 text-center whitespace-nowrap">
+        <div class="inline-flex items-center gap-1.5 shrink-0 flex-nowrap whitespace-nowrap">
           <button onclick="directPrintReceipt('${order.id}')" title="Direct Print Receipt" class="px-2 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-black font-thermal font-bold text-xs flex items-center gap-1 shadow-xs transition">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
           </button>
@@ -1364,16 +1366,16 @@ function renderRecentDashboardOrders() {
           </p>
         </div>
       </div>
-      <div class="flex items-center justify-between sm:justify-end gap-3">
-        <span class="font-mono font-black text-slate-900 text-sm">${curr}${order.pricing.grandTotal.toFixed(2)}</span>
-        <div class="flex items-center gap-1.5">
-          <button onclick="directPrintReceipt('${order.id}')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-black text-white font-thermal font-bold text-xs flex items-center gap-1 shadow-xs transition" title="Direct Print Receipt">
+      <div class="flex items-center justify-between sm:justify-end gap-3 flex-nowrap whitespace-nowrap">
+        <span class="font-mono font-black text-slate-900 text-sm whitespace-nowrap shrink-0">${curr}${order.pricing.grandTotal.toFixed(2)}</span>
+        <div class="flex items-center gap-1.5 shrink-0 flex-nowrap whitespace-nowrap">
+          <button onclick="directPrintReceipt('${order.id}')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-black text-white font-thermal font-bold text-xs flex items-center gap-1 shadow-xs transition whitespace-nowrap" title="Direct Print Receipt">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print
           </button>
-          <button onclick="downloadQRCodeForOrder('${order.id}')" class="px-2 py-1 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-thermal font-bold text-xs flex items-center gap-1 transition" title="Download QR (.PNG)">
+          <button onclick="downloadQRCodeForOrder('${order.id}')" class="px-2 py-1 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-thermal font-bold text-xs flex items-center gap-1 transition whitespace-nowrap" title="Download QR (.PNG)">
             <i data-lucide="download" class="w-3.5 h-3.5"></i> QR
           </button>
-          <button onclick="handleViewReceiptById('${order.id}')" class="px-2 py-1 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-thermal font-bold text-xs transition">
+          <button onclick="handleViewReceiptById('${order.id}')" class="px-2 py-1 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 font-thermal font-bold text-xs transition whitespace-nowrap">
             View
           </button>
         </div>
