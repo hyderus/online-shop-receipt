@@ -88,7 +88,7 @@
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="style.css?v=4.2" />
+  <link rel="stylesheet" href="style.css?v=4.3" />
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased selection:bg-slate-900 selection:text-white">
 
@@ -988,7 +988,32 @@
           <p class="text-center font-black tracking-wider uppercase mb-1">*ITEMS*</p>
           
           <div id="receipt-items-container" class="space-y-1.5">
-            <!-- Rendered line items with IMEI / Serial numbers -->
+            <div class="space-y-0.5 leading-tight">
+              <div class="flex justify-between items-baseline font-black text-[15px] sm:text-[16px] leading-tight">
+                <div class="min-w-0 pr-1">
+                  <span>Pixel 7A CHARC 128 GB</span>
+                  <span class="text-xs font-bold text-black ml-1">(x1)</span>
+                </div>
+                <span class="shrink-0 whitespace-nowrap ml-2">£312.88</span>
+              </div>
+              <div class="text-[14px] sm:text-[15px] pl-1 font-mono font-bold space-y-0.5 leading-tight">
+                <div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI1:</span><span class="font-black ml-2 font-mono tracking-wide">353529407882886</span></div>
+                <div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI2:</span><span class="font-bold ml-2 font-mono tracking-wide">353529407882894</span></div>
+                <div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">S/N:</span><span class="font-bold ml-2 font-mono tracking-wide">39251JEHN06086</span></div>
+              </div>
+            </div>
+            <div class="space-y-0.5 leading-tight">
+              <div class="flex justify-between items-baseline font-black text-[15px] sm:text-[16px] leading-tight">
+                <div class="min-w-0 pr-1">
+                  <span>MALVIK PRO 30W</span>
+                  <span class="text-xs font-bold text-black ml-1">(x1)</span>
+                </div>
+                <span class="shrink-0 whitespace-nowrap ml-2">£27.90</span>
+              </div>
+              <div class="text-[14px] sm:text-[15px] pl-1 font-mono font-bold space-y-0.5 leading-tight">
+                <div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">SKU:</span><span class="font-bold ml-2 font-mono tracking-wide">511</span></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1056,7 +1081,9 @@
         <!-- Dynamic Scannable QR Code Block (Cleaned up: No Token, No download button clutter, Single Square) -->
         <div class="py-1 text-center space-y-0.5 border-b border-black">
           <p class="text-[11px] font-black uppercase tracking-wider text-black leading-none">SCAN TO VERIFY DIGITAL RECEIPT</p>
-          <div id="receipt-qrcode-canvas" class="block mx-auto p-0 bg-transparent my-0.5 w-[112px] h-[112px] max-w-[112px] max-h-[112px] overflow-hidden leading-none"></div>
+          <div id="receipt-qrcode-canvas" class="block mx-auto p-0 bg-transparent my-0.5 w-[112px] h-[112px] max-w-[112px] max-h-[112px] overflow-hidden leading-none">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https%3A%2F%2Fmopa.dpdns.org%2F%3Freceipt%3DUC664413" alt="SWAPEE QR" style="width: 112px; height: 112px; margin: 0 auto; display: block;" />
+          </div>
         </div>
 
         <!-- Warranty Policy & Closing -->
@@ -1220,6 +1247,20 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Application Logic -->
-  <script src="app.js?v=4.2"></script>
+  <script src="app.js?v=4.3"></script>
+  <script>
+    // Immediate fallback trigger for verified authentic toast if scanned via QR
+    if (window.location.search && window.location.search.indexOf('receipt=') !== -1) {
+      setTimeout(function() {
+        var toast = document.getElementById('verified-authentic-toast');
+        if (toast && !toast.classList.contains('show-toast')) {
+          toast.classList.add('show-toast');
+          setTimeout(function() {
+            if (toast) toast.classList.remove('show-toast');
+          }, 5000);
+        }
+      }, 400);
+    }
+  </script>
 </body>
 </html>

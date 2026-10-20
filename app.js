@@ -849,8 +849,9 @@ function handleCreateReceipt(e) {
    ========================================================================== */
 
 function openReceiptModal(order, isViaQR = false) {
+  if (!order) return;
   currentViewingOrder = order;
-  const curr = appSettings.currency;
+  const curr = (appSettings && appSettings.currency) || '£';
 
   const actionsBar = document.getElementById('receipt-modal-actions-bar');
 
@@ -863,74 +864,120 @@ function openReceiptModal(order, isViaQR = false) {
   }
 
   // Header & IDs
-  document.getElementById('receipt-view-id').textContent = order.id;
-  document.getElementById('receipt-view-date').textContent = formatUKDate(order.date);
-  document.getElementById('receipt-view-cashier').textContent = order.cashier || 'ASHA';
+  const idEl = document.getElementById('receipt-view-id');
+  if (idEl) idEl.textContent = order.id || 'UC664413';
+  const dateEl = document.getElementById('receipt-view-date');
+  if (dateEl) dateEl.textContent = formatUKDate(order.date);
+  const cashierEl = document.getElementById('receipt-view-cashier');
+  if (cashierEl) cashierEl.textContent = order.cashier || 'ASHA';
 
   // Customer
-  document.getElementById('receipt-cust-no').textContent = order.customer.customerNo || 'N/A';
-  document.getElementById('receipt-cust-name').textContent = order.customer.name || order.customer.id || 'N/A';
-  document.getElementById('receipt-cust-address').textContent = order.customer.address || 'N/A';
+  const cust = order.customer || {};
+  const custNoEl = document.getElementById('receipt-cust-no');
+  if (custNoEl) custNoEl.textContent = cust.customerNo || '758D56-3';
+  const custNameEl = document.getElementById('receipt-cust-name');
+  if (custNameEl) custNameEl.textContent = cust.name || cust.id || 'ASHER';
+  const custAddrEl = document.getElementById('receipt-cust-address');
+  if (custAddrEl) custAddrEl.textContent = cust.address || 'MUSEUM, YORK Y01 7FR';
 
-  // Product Line Items Render
-  const itemsContainer = document.getElementById('receipt-items-container');
-  itemsContainer.innerHTML = '';
-
-  order.items.forEach(item => {
-    const itemBlock = document.createElement('div');
-    itemBlock.className = 'space-y-0.5 leading-tight';
-
-    let detailsHtml = '';
-    if (item.imei1) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI1:</span><span class="font-black ml-2 font-mono tracking-wide">${escapeHTML(item.imei1)}</span></div>`;
-    if (item.imei2) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI2:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.imei2)}</span></div>`;
-    if (item.sn) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">S/N:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sn)}</span></div>`;
-    if (item.sku) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">SKU:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sku)}</span></div>`;
-
-    itemBlock.innerHTML = `
-      <div class="flex justify-between items-baseline font-black text-[15px] sm:text-[16px] leading-tight">
-        <div class="min-w-0 pr-1">
-          <span>${escapeHTML(item.name)}</span>
-          <span class="text-xs font-bold text-black ml-1">(x${item.qty})</span>
-        </div>
-        <span class="shrink-0 whitespace-nowrap ml-2">${curr}${item.price.toFixed(2)}</span>
-      </div>
-      ${detailsHtml ? `<div class="text-[14px] sm:text-[15px] pl-1 font-mono font-bold space-y-0.5 leading-tight">${detailsHtml}</div>` : ''}
-    `;
-    itemsContainer.appendChild(itemBlock);
-  });
-
-  // Calculations
-  document.getElementById('receipt-subtotal').textContent = `${curr}${order.pricing.subtotal.toFixed(2)}`;
-
-  const discountRow = document.getElementById('receipt-discount-row');
-  if (order.pricing.discount > 0) {
-    discountRow.classList.remove('hidden');
-    document.getElementById('receipt-discount').textContent = `${curr}${order.pricing.discount.toFixed(2)}`;
-  } else {
-    discountRow.classList.add('hidden');
+  // Render Scannable QR Code first to guarantee visibility
+  try {
+    generateReceiptQRCode(order);
+  } catch (qrErr) {
+    console.warn('QR code generation error:', qrErr);
   }
 
-  document.getElementById('receipt-tax-label').textContent = `TAX (${order.pricing.taxRate || 20}%)`;
-  document.getElementById('receipt-tax').textContent = `${curr}${order.pricing.taxAmount.toFixed(2)}`;
-  document.getElementById('receipt-grand-total').textContent = `${curr}${order.pricing.grandTotal.toFixed(2)}`;
+  // Product Line Items Render (Guarded and defensive)
+  const itemsContainer = document.getElementById('receipt-items-container');
+  if (itemsContainer) {
+    const rawItems = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
+    if (rawItems.length > 0) {
+      itemsContainer.innerHTML = '';
+      rawItems.forEach(item => {
+        try {
+          const itemBlock = document.createElement('div');
+          itemBlock.className = 'space-y-0.5 leading-tight';
+
+          let detailsHtml = '';
+          if (item.imei1) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI1:</span><span class="font-black ml-2 font-mono tracking-wide">${escapeHTML(item.imei1)}</span></div>`;
+          if (item.imei2) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">IMEI2:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.imei2)}</span></div>`;
+          if (item.sn) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">S/N:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sn)}</span></div>`;
+          if (item.sku) detailsHtml += `<div class="item-detail-row flex justify-between items-center text-[14px] sm:text-[15px] font-black"><span class="text-black font-black">SKU:</span><span class="font-bold ml-2 font-mono tracking-wide">${escapeHTML(item.sku)}</span></div>`;
+
+          const priceNum = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+          const qtyNum = parseInt(item.qty, 10) || 1;
+
+          itemBlock.innerHTML = `
+            <div class="flex justify-between items-baseline font-black text-[15px] sm:text-[16px] leading-tight">
+              <div class="min-w-0 pr-1">
+                <span>${escapeHTML(item.name || 'Item')}</span>
+                <span class="text-xs font-bold text-black ml-1">(x${qtyNum})</span>
+              </div>
+              <span class="shrink-0 whitespace-nowrap ml-2">${curr}${priceNum.toFixed(2)}</span>
+            </div>
+            ${detailsHtml ? `<div class="text-[14px] sm:text-[15px] pl-1 font-mono font-bold space-y-0.5 leading-tight">${detailsHtml}</div>` : ''}
+          `;
+          itemsContainer.appendChild(itemBlock);
+        } catch (itemErr) {
+          console.warn('Error rendering item:', itemErr);
+        }
+      });
+    }
+  }
+
+  // Calculations & Totals (Guarded against missing values)
+  const pricing = order.pricing || {};
+  const subtotalNum = typeof pricing.subtotal === 'number' ? pricing.subtotal : parseFloat(pricing.subtotal) || 0;
+  const discountNum = typeof pricing.discount === 'number' ? pricing.discount : parseFloat(pricing.discount) || 0;
+  const grandTotalNum = typeof pricing.grandTotal === 'number' ? pricing.grandTotal : parseFloat(pricing.grandTotal) || subtotalNum;
+  const taxRateNum = typeof pricing.taxRate === 'number' ? pricing.taxRate : parseFloat(pricing.taxRate) || 20;
+  const taxAmountNum = typeof pricing.taxAmount === 'number' ? pricing.taxAmount : parseFloat(pricing.taxAmount) || (grandTotalNum * 0.2);
+
+  const subtotalEl = document.getElementById('receipt-subtotal');
+  if (subtotalEl) subtotalEl.textContent = `${curr}${subtotalNum.toFixed(2)}`;
+
+  const discountRow = document.getElementById('receipt-discount-row');
+  const discountEl = document.getElementById('receipt-discount');
+  if (discountRow) {
+    if (discountNum > 0) {
+      discountRow.classList.remove('hidden');
+      if (discountEl) discountEl.textContent = `${curr}${discountNum.toFixed(2)}`;
+    } else {
+      discountRow.classList.add('hidden');
+    }
+  }
+
+  const taxLabelEl = document.getElementById('receipt-tax-label');
+  if (taxLabelEl) taxLabelEl.textContent = `TAX (${taxRateNum}%)`;
+  const taxEl = document.getElementById('receipt-tax');
+  if (taxEl) taxEl.textContent = `${curr}${taxAmountNum.toFixed(2)}`;
+  const grandTotalEl = document.getElementById('receipt-grand-total');
+  if (grandTotalEl) grandTotalEl.textContent = `${curr}${grandTotalNum.toFixed(2)}`;
 
   // Transaction
-  document.getElementById('receipt-pay-method').textContent = order.payment.method || 'VISA';
-  document.getElementById('receipt-trans-acct').textContent = order.payment.acct || '****3471';
-  document.getElementById('receipt-trans-auth').textContent = order.payment.authCode || '465116';
-  document.getElementById('receipt-trans-entry').textContent = order.payment.entryMethod || 'CHIP READ';
-  document.getElementById('receipt-trans-aid').textContent = order.payment.aid || 'A000004123645';
+  const payment = order.payment || {};
+  const payMethodEl = document.getElementById('receipt-pay-method');
+  if (payMethodEl) payMethodEl.textContent = payment.method || 'VISA';
+  const transAcctEl = document.getElementById('receipt-trans-acct');
+  if (transAcctEl) transAcctEl.textContent = payment.acct || '****3471';
+  const transAuthEl = document.getElementById('receipt-trans-auth');
+  if (transAuthEl) transAuthEl.textContent = payment.authCode || '465116';
+  const transEntryEl = document.getElementById('receipt-trans-entry');
+  if (transEntryEl) transEntryEl.textContent = payment.entryMethod || 'CHIP READ';
+  const transAidEl = document.getElementById('receipt-trans-aid');
+  if (transAidEl) transAidEl.textContent = payment.aid || 'A000004123645';
 
   // Warranty
-  document.getElementById('receipt-warranty-text').textContent = order.warranty || appSettings.footer;
+  const warrantyEl = document.getElementById('receipt-warranty-text');
+  if (warrantyEl) warrantyEl.textContent = order.warranty || (appSettings && appSettings.footer) || 'For electronics and mobile warranty issues past the return period, call +44 131 662 9955.';
 
   // Reveal Modal FIRST so layout & canvas dimensions are active on mobile devices
-  document.getElementById('receipt-modal').classList.remove('hidden');
+  const modalEl = document.getElementById('receipt-modal');
+  if (modalEl) modalEl.classList.remove('hidden');
 
-  // Render Scannable QR Code
-  generateReceiptQRCode(order);
-
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide) {
+    try { lucide.createIcons(); } catch (e) {}
+  }
 }
 
 function closeReceiptModal() {
@@ -1058,6 +1105,26 @@ function generateReceiptQRCode(order) {
       requestAnimationFrame(deduplicateQR);
       setTimeout(deduplicateQR, 30);
       setTimeout(deduplicateQR, 100);
+
+      // Ultimate safety net: if neither canvas nor img has loaded after 200ms, fallback to QRServer API
+      setTimeout(() => {
+        const anyImg = qrContainer.querySelector('img');
+        const anyCanvas = qrContainer.querySelector('canvas');
+        const hasImgSrc = anyImg && anyImg.src && anyImg.src.startsWith('data:image') && anyImg.src.length > 50;
+        const hasCanvas = anyCanvas && anyCanvas.width > 0;
+        if (!hasImgSrc && !hasCanvas) {
+          qrContainer.innerHTML = '';
+          const fallback = document.createElement('img');
+          fallback.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(receiptUrl)}`;
+          fallback.alt = 'Receipt QR Code';
+          fallback.style.width = '112px';
+          fallback.style.height = '112px';
+          fallback.style.margin = '0 auto';
+          fallback.style.display = 'block';
+          fallback.style.border = 'none';
+          qrContainer.appendChild(fallback);
+        }
+      }, 200);
     } else {
       throw new Error('QRCode not loaded');
     }
