@@ -3,12 +3,12 @@
  * Official Store Portal for SWAPEE (4 South Clerk Street, Edinburgh EH8 9JE, UK)
  */
 
-// Application Storage Keys (v7: Clean compact format, reduced spacing, sharp QR)
-const STORAGE_KEY_ORDERS = 'swapee_orders_v7';
-const STORAGE_KEY_SETTINGS = 'swapee_settings_v7';
+// Application Storage Keys (v8: Synchronized cross-device QR verification & dynamic SKU update)
+const STORAGE_KEY_ORDERS = 'swapee_orders_v8';
+const STORAGE_KEY_SETTINGS = 'swapee_settings_v8';
 
 // Automatically wipe previous cached versions to ensure clean fresh data
-['shopreceipt_orders_v1', 'shopreceipt_settings_v1', 'swapee_orders_v2', 'swapee_settings_v2', 'swapee_orders_v3', 'swapee_settings_v3', 'swapee_orders_v4', 'swapee_settings_v4', 'swapee_orders_v5', 'swapee_settings_v5', 'swapee_orders_v6', 'swapee_settings_v6'].forEach(k => {
+['shopreceipt_orders_v1', 'shopreceipt_settings_v1', 'swapee_orders_v2', 'swapee_settings_v2', 'swapee_orders_v3', 'swapee_settings_v3', 'swapee_orders_v4', 'swapee_settings_v4', 'swapee_orders_v5', 'swapee_settings_v5', 'swapee_orders_v6', 'swapee_settings_v6', 'swapee_orders_v7', 'swapee_settings_v7'].forEach(k => {
   try { localStorage.removeItem(k); } catch (e) {}
 });
 
@@ -165,7 +165,7 @@ function getInitialSampleOrders() {
           qty: 1,
           price: 27.90,
           total: 27.90,
-          sku: '511',
+          sku: 'A56476',
           imei1: '',
           imei2: '',
           sn: ''
@@ -722,7 +722,7 @@ function loadSWAPEESampleReceipt() {
     'MALVIK PRO 30W',
     1,
     27.90,
-    '511',
+    'A56476',
     '',
     '',
     '',
@@ -1000,14 +1000,180 @@ function directPrintReceipt(orderId) {
 }
 
 /**
+ * Compact order encoder for cross-device QR synchronization
+ */
+function compressOrderForQR(order) {
+  try {
+    if (!order) return '';
+    const compact = {
+      i: order.id,
+      d: (order.date || '').slice(0, 10),
+      c: order.cashier || 'ASHA',
+      cu: [
+        order.customer?.name || '',
+        order.customer?.customerNo || '',
+        order.customer?.address || '',
+        order.customer?.phone || ''
+      ],
+      it: (order.items || []).map(it => [
+        it.name || '',
+        Number(it.qty) || 1,
+        Number(it.price) || 0,
+        it.imei1 || '',
+        it.imei2 || '',
+        it.sn || '',
+        it.sku || ''
+      ]),
+      p: [
+        Number(order.pricing?.subtotal) || 0,
+        Number(order.pricing?.discount) || 0,
+        Number(order.pricing?.taxRate) || 20,
+        Number(order.pricing?.taxAmount) || 0,
+        Number(order.pricing?.grandTotal) || 0
+      ],
+      py: [
+        order.payment?.method || 'VISA',
+        order.payment?.status || 'Paid',
+        order.payment?.acct || '',
+        order.payment?.authCode || '',
+        order.payment?.entryMethod || '',
+        order.payment?.aid || ''
+      ],
+      w: order.warranty || ''
+    };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+  } catch (e) {
+    console.warn('Compress error:', e);
+    return '';
+  }
+}
+
+/**
+ * Universal cross-device QR decompressor
+ */
+function decompressOrderFromQR(encodedStr) {
+  try {
+    if (!encodedStr) return null;
+    const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(encodedStr))));
+    const c = JSON.parse(jsonStr);
+    if (!c) return null;
+
+    if (c.i) {
+      return {
+        id: c.i,
+        date: c.d ? new Date(c.d).toISOString() : new Date().toISOString(),
+        cashier: c.c || 'ASHA',
+        customer: {
+          name: c.cu?.[0] || 'CUSTOMER',
+          id: c.cu?.[0] || 'CUSTOMER',
+          customerNo: c.cu?.[1] || 'N/A',
+          address: c.cu?.[2] || 'N/A',
+          phone: c.cu?.[3] || ''
+        },
+        items: (c.it || []).map(row => {
+          const qty = Number(row[1]) || 1;
+          const price = Number(row[2]) || 0;
+          return {
+            name: row[0] || 'Product',
+            qty,
+            price,
+            total: qty * price,
+            imei1: row[3] || '',
+            imei2: row[4] || '',
+            sn: row[5] || '',
+            sku: row[6] || '',
+            selectedFields: {
+              imei1: !!row[3],
+              imei2: !!row[4],
+              sn: !!row[5],
+              sku: !!row[6]
+            }
+          };
+        }),
+        pricing: {
+          subtotal: Number(c.p?.[0]) || 0,
+          discount: Number(c.p?.[1]) || 0,
+          taxRate: Number(c.p?.[2]) || 20,
+          taxAmount: Number(c.p?.[3]) || 0,
+          grandTotal: Number(c.p?.[4]) || 0
+        },
+        payment: {
+          method: c.py?.[0] || 'VISA',
+          status: c.py?.[1] || 'Paid',
+          acct: c.py?.[2] || '****3471',
+          authCode: c.py?.[3] || '465116',
+          entryMethod: c.py?.[4] || 'CHIP READ',
+          aid: c.py?.[5] || 'A000004123645'
+        },
+        warranty: c.w || ''
+      };
+    }
+
+    if (c.id) {
+      return {
+        id: c.id,
+        date: c.dt || new Date().toISOString(),
+        cashier: c.ca || 'ASHA',
+        customer: {
+          name: c.c || 'CUSTOMER',
+          id: c.c || 'CUSTOMER',
+          customerNo: c.cn || 'N/A',
+          address: c.a || 'Edinburgh',
+          phone: ''
+        },
+        items: (c.itm || []).map(i => ({
+          name: i.n || 'Item',
+          qty: i.q || 1,
+          price: i.p || 0,
+          total: (i.q || 1) * (i.p || 0),
+          imei1: i.i1 || '',
+          imei2: i.i2 || '',
+          sn: i.sn || '',
+          sku: i.sku || ''
+        })),
+        pricing: {
+          grandTotal: c.t || 0,
+          subtotal: c.t || 0,
+          discount: 0,
+          taxRate: 20,
+          taxAmount: (c.t || 0) * 0.2
+        },
+        payment: {
+          method: 'VISA',
+          status: 'Paid',
+          acct: '****3471',
+          authCode: '465116',
+          entryMethod: 'CHIP READ',
+          aid: 'A000004123645'
+        },
+        warranty: ''
+      };
+    }
+  } catch (err) {
+    console.warn('Decompress error:', err);
+    return null;
+  }
+}
+
+function buildReceiptVerificationUrl(order) {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  if (!order || !order.id) return base;
+  const compressed = compressOrderForQR(order);
+  if (compressed) {
+    return `${base}?receipt=${encodeURIComponent(order.id)}&d=${encodeURIComponent(compressed)}`;
+  }
+  return `${base}?receipt=${encodeURIComponent(order.id)}`;
+}
+
+/**
  * Download QR Code badge image directly from Dashboard / History table
  */
 function downloadQRCodeForOrder(orderId) {
-  const order = orders.find(o => o.id === orderId);
+  const order = orders.find(o => o.id === orderId) || currentViewingOrder;
   if (!order) return;
 
   const tempContainer = document.createElement('div');
-  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
+  const receiptUrl = buildReceiptVerificationUrl(order);
 
   new QRCode(tempContainer, {
     text: receiptUrl,
@@ -1043,8 +1209,8 @@ function generateReceiptQRCode(order) {
   if (!qrContainer) return;
   qrContainer.innerHTML = '';
 
-  // Clean, lightweight verification URL (Short length produces large, chunky QR blocks for perfect thermal readability)
-  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
+  // Full verified URL with compact payload for automatic cross-device synchronization
+  const receiptUrl = buildReceiptVerificationUrl(order);
 
   try {
     if (typeof QRCode !== 'undefined') {
@@ -1175,7 +1341,7 @@ function shareViaWhatsApp() {
   if (!currentViewingOrder) return;
   const order = currentViewingOrder;
   const curr = appSettings.currency;
-  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(order.id)}`;
+  const receiptUrl = buildReceiptVerificationUrl(order);
 
   const itemsSummary = order.items.map(i => {
     let s = `• ${i.name} (x${i.qty}) - ${curr}${i.price.toFixed(2)}`;
@@ -1209,7 +1375,7 @@ function shareViaWhatsApp() {
 
 function copyReceiptLink() {
   if (!currentViewingOrder) return;
-  const receiptUrl = `${window.location.origin}${window.location.pathname}?receipt=${encodeURIComponent(currentViewingOrder.id)}`;
+  const receiptUrl = buildReceiptVerificationUrl(currentViewingOrder);
 
   navigator.clipboard.writeText(receiptUrl).then(() => {
     showToast('Receipt link copied to clipboard!', 'success');
@@ -2174,52 +2340,28 @@ function handleDeepLink() {
   if (receiptId) {
     let match = orders.find(o => o.id.toUpperCase() === receiptId.toUpperCase());
 
-    // Check if encoded payload &d= exists in URL for universal offline verification
+    // Check if encoded payload &d= exists in URL for universal cross-device synchronization
     const encodedData = params.get('d');
-    if (encodedData && !match) {
+    if (encodedData) {
       try {
-        const decoded = JSON.parse(atob(decodeURIComponent(encodedData)));
+        const decoded = decompressOrderFromQR(encodedData);
         if (decoded && decoded.id) {
-          match = {
-            id: decoded.id,
-            date: decoded.dt || new Date().toISOString(),
-            cashier: decoded.ca || 'ASHA',
-            customer: {
-              name: decoded.c || 'CUSTOMER',
-              customerNo: decoded.cn || 'N/A',
-              address: decoded.a || 'Edinburgh'
-            },
-            items: (decoded.itm || []).map(i => ({
-              name: i.n,
-              qty: i.q || 1,
-              price: i.p || 0,
-              total: (i.q || 1) * (i.p || 0),
-              imei1: i.i1 || '',
-              imei2: i.i2 || '',
-              sn: i.sn || '',
-              sku: i.sku || ''
-            })),
-            pricing: {
-              grandTotal: decoded.t || 0,
-              subtotal: decoded.t || 0,
-              discount: 0,
-              taxRate: 20,
-              taxAmount: (decoded.t || 0) * 0.2
-            },
-            payment: {
-              method: 'VISA',
-              status: 'Paid'
-            }
-          };
-          orders.unshift(match);
-          saveOrders(orders);
+          match = decoded;
+          // Synchronize/upsert to device's local orders
+          const existingIdx = orders.findIndex(o => o.id.toUpperCase() === decoded.id.toUpperCase());
+          if (existingIdx !== -1) {
+            orders[existingIdx] = decoded;
+          } else {
+            orders.unshift(decoded);
+          }
+          try { saveOrders(orders); } catch (e) {}
         }
       } catch (e) {
         console.warn('Could not parse encoded data', e);
       }
     }
 
-    // Fallback: If scanned on a different device (like customer's mobile phone) without sync, reconstruct a valid SWAPEE verified receipt
+    // Fallback: If scanned on a different device without sync, reconstruct a valid SWAPEE verified receipt
     if (!match) {
       match = {
         id: receiptId.toUpperCase(),
@@ -2236,20 +2378,30 @@ function handleDeepLink() {
           {
             name: 'Pixel 7A CHARC 128 GB',
             qty: 1,
-            price: 249.99,
-            total: 249.99,
+            price: 312.88,
+            total: 312.88,
             imei1: '353529407882886',
             imei2: '353529407882894',
             sn: '39251JEHN06086',
-            sku: '511'
+            sku: ''
+          },
+          {
+            name: 'MALVIK PRO 30W',
+            qty: 1,
+            price: 27.90,
+            total: 27.90,
+            sku: 'A56476',
+            imei1: '',
+            imei2: '',
+            sn: ''
           }
         ],
         pricing: {
-          subtotal: 208.33,
-          discount: 0,
-          taxRate: 20,
-          taxAmount: 41.66,
-          grandTotal: 249.99
+          subtotal: 340.78,
+          discount: 20.00,
+          taxRate: 20.0,
+          taxAmount: 64.16,
+          grandTotal: 384.94
         },
         payment: {
           method: 'VISA',
