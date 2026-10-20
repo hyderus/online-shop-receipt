@@ -88,7 +88,7 @@
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="style.css?v=4.5" />
+  <link rel="stylesheet" href="style.css?v=4.6" />
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased selection:bg-slate-900 selection:text-white">
 
@@ -119,10 +119,10 @@
         </div>
 
         <div>
-          <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">Admin Username / Email</label>
+          <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">Username</label>
           <div class="relative">
             <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="admin-username-input" required autocomplete="username" placeholder="rgg260747@gmail.com" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm font-semibold text-slate-900 placeholder:text-slate-400" />
+            <input type="text" id="admin-username-input" required autocomplete="username" placeholder="Username" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm font-semibold text-slate-900 placeholder:text-slate-400" />
           </div>
         </div>
 
@@ -130,7 +130,7 @@
           <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">Password</label>
           <div class="relative">
             <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="password" id="admin-password-input" required autocomplete="current-password" placeholder="••••••••••••" class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm font-semibold text-slate-900 placeholder:text-slate-400" />
+            <input type="password" id="admin-password-input" required autocomplete="current-password" placeholder="" class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm font-semibold text-slate-900 placeholder:text-slate-400" />
             <button type="button" onclick="toggleAdminPasswordVisibility()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700" title="Toggle password visibility">
               <i id="admin-pw-toggle-icon" data-lucide="eye" class="w-4 h-4"></i>
             </button>
@@ -1246,7 +1246,7 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Application Logic -->
-  <script src="app.js?v=4.5"></script>
+  <script src="app.js?v=4.6"></script>
   <script>
     // Immediate fallback trigger for verified authentic toast if scanned via QR
     if (window.location.search && window.location.search.indexOf('receipt=') !== -1) {

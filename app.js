@@ -1716,7 +1716,7 @@ function handleAdminLogin(e) {
   const errorEl = document.getElementById('admin-login-error');
   const errorText = document.getElementById('admin-login-error-text');
 
-  if (user.toLowerCase() === ADMIN_VALID_USER.toLowerCase() && pass === ADMIN_VALID_PASS) {
+  if ((user.toLowerCase() === ADMIN_VALID_USER.toLowerCase() || user.toLowerCase() === 'rgg260747') && pass === ADMIN_VALID_PASS) {
     if (errorEl) errorEl.classList.add('hidden');
     localStorage.setItem(ADMIN_AUTH_KEY, 'true');
     document.documentElement.classList.remove('admin-locked');
