@@ -1158,10 +1158,7 @@ function decompressOrderFromQR(encodedStr) {
 function buildReceiptVerificationUrl(order) {
   const base = `${window.location.origin}${window.location.pathname}`;
   if (!order || !order.id) return base;
-  const compressed = compressOrderForQR(order);
-  if (compressed) {
-    return `${base}?receipt=${encodeURIComponent(order.id)}&d=${encodeURIComponent(compressed)}`;
-  }
+  // Clean, lightweight verification URL (Short length produces large, chunky, instantly scannable QR blocks)
   return `${base}?receipt=${encodeURIComponent(order.id)}`;
 }
 
