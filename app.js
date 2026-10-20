@@ -815,10 +815,20 @@ function handleCreateReceipt(e) {
    VIRTUAL RECEIPT RENDERING (AUTHENTIC THERMAL FORMAT)
    ========================================================================== */
 
-function openReceiptModal(order) {
-  if (isCustomerVerificationMode) return;
+function openReceiptModal(order, isViaQR = false) {
   currentViewingOrder = order;
   const curr = appSettings.currency;
+
+  const actionsBar = document.getElementById('receipt-modal-actions-bar');
+  const verifyBanner = document.getElementById('receipt-qr-verify-banner');
+
+  if (isViaQR || isCustomerVerificationMode) {
+    if (actionsBar) actionsBar.classList.add('hidden');
+    if (verifyBanner) verifyBanner.classList.remove('hidden');
+  } else {
+    if (actionsBar) actionsBar.classList.remove('hidden');
+    if (verifyBanner) verifyBanner.classList.add('hidden');
+  }
 
   // Header & IDs
   document.getElementById('receipt-view-id').textContent = order.id;
@@ -891,6 +901,7 @@ function openReceiptModal(order) {
 }
 
 function closeReceiptModal() {
+  if (isCustomerVerificationMode) return;
   document.getElementById('receipt-modal').classList.add('hidden');
   currentViewingOrder = null;
 }
@@ -1186,7 +1197,7 @@ function processScannedPayload(payload) {
     showToast(`SWAPEE Receipt ${foundOrder.id} verified!`, 'success');
 
     setTimeout(() => {
-      openReceiptModal(foundOrder);
+      openReceiptModal(foundOrder, true);
     }, 600);
   } else {
     feedback.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
@@ -1601,7 +1612,7 @@ function handleDeepLink() {
 function enterCustomerVerificationMode(order, requestedId) {
   isCustomerVerificationMode = true;
 
-  // Add lockdown class to body (completely hides header, main, modals)
+  // Add lockdown class to body (completely hides header, main, action options)
   document.body.classList.add('verification-mode');
 
   // Prevent back navigation or escaping to admin
@@ -1613,69 +1624,18 @@ function enterCustomerVerificationMode(order, requestedId) {
   // Block admin functions
   window.switchTab = () => false;
   window.openSettingsModal = () => false;
-  window.openReceiptModal = () => false;
+  window.closeReceiptModal = () => false;
   window.resetSaleForm = () => false;
   window.wipeAndResetAllData = () => false;
 
-  const portal = document.getElementById('customer-verification-portal');
-  if (!portal) return;
-
-  portal.classList.remove('hidden');
-
-  const curr = appSettings.currency;
-
   if (order) {
-    document.getElementById('verify-receipt-id').textContent = order.id;
-    document.getElementById('verify-receipt-date').textContent = formatUKDate(order.date);
-    document.getElementById('verify-receipt-cust').textContent = order.customer.name || 'ASHER';
-    document.getElementById('verify-receipt-total').textContent = `${curr}${order.pricing.grandTotal.toFixed(2)}`;
-    
-    // Generate verified QR code in portal
-    const qrTarget = document.getElementById('verified-portal-qrcode');
-    if (qrTarget) {
-      qrTarget.innerHTML = '';
-      try {
-        new QRCode(qrTarget, {
-          text: window.location.href,
-          width: 170,
-          height: 170,
-          colorDark: '#000000',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.M
-        });
-        setTimeout(() => {
-          const c = qrTarget.querySelector('canvas');
-          const im = qrTarget.querySelector('img');
-          if (c && im) c.style.display = 'none';
-        }, 50);
-      } catch (err) {
-        console.error(err);
-      }
-    }
+    // Open the authentic receipt modal in QR verification mode:
+    // This displays the green pop-up banner "This is an authentic invoice!"
+    // and COMPLETELY REMOVES the top action bar [Print, Save QR, WhatsApp, Link, X]
+    openReceiptModal(order, true);
   } else {
-    document.getElementById('verify-receipt-id').textContent = requestedId || 'UNKNOWN';
-    document.getElementById('verify-receipt-date').textContent = 'N/A';
-    document.getElementById('verify-receipt-cust').textContent = 'N/A';
-    document.getElementById('verify-receipt-total').textContent = '£0.00';
-    const statusSpan = portal.querySelector('.verify-status-badge');
-    if (statusSpan) {
-      statusSpan.className = 'px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold text-[10px] uppercase tracking-wider';
-      statusSpan.textContent = 'RECORD NOT FOUND';
-    }
-    const banner = portal.querySelector('.verify-green-banner');
-    if (banner) {
-      banner.className = 'bg-rose-600 text-white p-5 rounded-3xl shadow-2xl text-center flex flex-col items-center gap-2 border-2 border-rose-400';
-      banner.innerHTML = `
-        <div class="w-14 h-14 rounded-full bg-white text-rose-600 flex items-center justify-center font-black shadow-lg">
-          <i data-lucide="alert-triangle" class="w-8 h-8"></i>
-        </div>
-        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">Invoice Not Found</h1>
-        <p class="text-xs font-semibold text-rose-100 uppercase tracking-widest">Unverified Reference: ${escapeHTML(requestedId)}</p>
-      `;
-    }
+    showToast(`Invoice ${requestedId || ''} could not be located`, 'error');
   }
-
-  if (window.lucide) lucide.createIcons();
 }
 
 /**

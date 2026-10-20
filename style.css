@@ -47,16 +47,27 @@ body, html, input, select, textarea, button, .font-thermal, .receipt-paper, #pri
   image-rendering: pixelated !important;
 }
 
-/* Customer Verification Mode (Lockdown: Only Green Popup & QR Code visible) */
+/* Customer Verification Mode (Lockdown: Only Green Popup & Receipt visible, Actions Removed) */
 body.verification-mode header,
 body.verification-mode main,
-body.verification-mode #receipt-modal,
 body.verification-mode #settings-modal,
-body.verification-mode #toast-container {
+body.verification-mode #toast-container,
+body.verification-mode #customer-verification-portal {
   display: none !important;
 }
 
-body.verification-mode #customer-verification-portal {
+body.verification-mode #receipt-modal {
+  display: flex !important;
+  background-color: rgba(2, 6, 23, 0.95) !important;
+}
+
+/* Permanently remove the action options (Print, Save QR, WhatsApp, Link, Close) when viewing via QR code */
+body.verification-mode #receipt-modal-actions-bar {
+  display: none !important;
+}
+
+/* Permanently show the green authentic invoice popup banner when viewing via QR code */
+body.verification-mode #receipt-qr-verify-banner {
   display: flex !important;
 }
 
