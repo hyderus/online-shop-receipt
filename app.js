@@ -32,6 +32,8 @@ let orders = loadOrders();
 let currentViewingOrder = null;
 let html5QrScannerInstance = null;
 let currentScannerRunning = false;
+let isCustomerVerificationMode = false;
+let verifiedToastTimer = null;
 
 // Pre-check verification mode and admin authentication gate immediately to eliminate any background flash
 const ADMIN_AUTH_KEY = 'swapee_admin_authenticated_v1';
@@ -1723,9 +1725,6 @@ window.checkAdminAuthenticationState = checkAdminAuthenticationState;
 /* ==========================================================================
    ROUTING & UTILITIES
    ========================================================================== */
-
-let isCustomerVerificationMode = false;
-let verifiedToastTimer = null;
 
 /**
  * Floating green authentic invoice popup toast controls (Pops up from bottom & auto-dismisses after 5s)
