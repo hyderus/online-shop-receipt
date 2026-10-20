@@ -1,0 +1,115 @@
+/* Custom Styles & Print Formatting for Online Shop Virtual Receipt System */
+
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+}
+
+/* Glassmorphism & Modern Shadows */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+}
+
+/* Receipt paper styling */
+.receipt-paper {
+  position: relative;
+  background: #ffffff;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Sawtooth receipt bottom edge decoration */
+.receipt-paper::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: radial-gradient(circle, transparent, transparent 50%, #ffffff 50%, #ffffff 100%);
+  background-size: 16px 16px;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Camera scan animation overlay */
+.scanner-laser {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0) 0%, #4f46e5 50%, rgba(79, 70, 229, 0) 100%);
+  box-shadow: 0 0 12px #4f46e5, 0 0 24px #4f46e5;
+  animation: scanLaser 2.2s infinite ease-in-out;
+}
+
+@keyframes scanLaser {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  50% {
+    top: 95%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.2;
+  }
+}
+
+/* Print specific styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-receipt-area,
+  #printable-receipt-area * {
+    visibility: visible;
+  }
+
+  #printable-receipt-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .receipt-paper::after {
+    display: none !important;
+  }
+}

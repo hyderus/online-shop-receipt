@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopReceipt Pro — Online Seller Virtual Receipt & QR Scanner</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Courier New', 'monospace'],
+            receipt: ['Outfit', 'Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- QR Code Generator CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- HTML5 QR Code Scanner CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- TOP APP NAVIGATION -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo & Store Name -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+          <i data-lucide="receipt" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="nav-shop-name" class="font-bold text-slate-900 tracking-tight text-lg">Apex Store</span>
+            <span class="text-xs bg-brand-50 text-brand-700 font-semibold px-2 py-0.5 rounded-full border border-brand-200">Virtual Receipt</span>
+          </div>
+          <p class="text-xs text-slate-500">QR Code Verification & Sales Tracker</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab active flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-brand-700 bg-white shadow-sm">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Dashboard</span>
+        </button>
+        <button onclick="switchTab('new-sale')" id="tab-btn-new-sale" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-200/50">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          <span>New Sale</span>
+        </button>
+        <button onclick="switchTab('scan-qr')" id="tab-btn-scan-qr" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-200/50">
+          <i data-lucide="scan" class="w-4 h-4"></i>
+          <span>Scan QR</span>
+        </button>
+        <button onclick="switchTab('history')" id="tab-btn-history" class="nav-tab flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-200/50">
+          <i data-lucide="history" class="w-4 h-4"></i>
+          <span>Orders</span>
+          <span id="nav-orders-count" class="ml-1 text-xs px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded-full font-bold">0</span>
+        </button>
+      </nav>
+
+      <!-- Right Controls -->
+      <div class="flex items-center gap-2">
+        <button onclick="switchTab('new-sale')" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition">
+          <i data-lucide="badge-dollar-sign" class="w-4 h-4"></i>
+          <span>Record Sale</span>
+        </button>
+        <button onclick="openSettingsModal()" title="Shop Settings" class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition border border-slate-200">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Navigation Bar -->
+    <div class="md:hidden flex border-t border-slate-200 px-2 py-1.5 bg-slate-50 gap-1 overflow-x-auto">
+      <button onclick="switchTab('dashboard')" id="mobile-tab-btn-dashboard" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold text-center text-brand-700 bg-white shadow-sm flex items-center justify-center gap-1.5">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Dashboard
+      </button>
+      <button onclick="switchTab('new-sale')" id="mobile-tab-btn-new-sale" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-medium text-center text-slate-600 hover:bg-slate-200/50 flex items-center justify-center gap-1.5">
+        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Sale
+      </button>
+      <button onclick="switchTab('scan-qr')" id="mobile-tab-btn-scan-qr" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-medium text-center text-slate-600 hover:bg-slate-200/50 flex items-center justify-center gap-1.5">
+        <i data-lucide="scan" class="w-3.5 h-3.5"></i> Scan QR
+      </button>
+      <button onclick="switchTab('history')" id="mobile-tab-btn-history" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-medium text-center text-slate-600 hover:bg-slate-200/50 flex items-center justify-center gap-1.5">
+        <i data-lucide="history" class="w-3.5 h-3.5"></i> Orders
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- Welcome Banner -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-xl">
+        <div class="absolute -right-12 -top-12 w-64 h-64 bg-brand-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-brand-200 text-xs font-medium backdrop-blur-sm mb-3">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Store Virtual Receipt Portal
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Sell, Issue Receipts & Verify in Seconds</h1>
+            <p class="text-slate-300 text-sm sm:text-base mt-1 max-w-xl">
+              Create instant digital receipts with cryptographic verification QR codes. Share directly on WhatsApp or scan with any smartphone camera.
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="switchTab('new-sale')" class="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/30 transition transform hover:-translate-y-0.5">
+              <i data-lucide="file-plus" class="w-5 h-5"></i>
+              <span>Create Receipt</span>
+            </button>
+            <button onclick="switchTab('scan-qr')" class="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition border border-white/20">
+              <i data-lucide="scan-line" class="w-5 h-5"></i>
+              <span>Scan QR Code</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Metrics Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Revenue -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Revenue</p>
+            <h3 id="stat-total-revenue" class="text-2xl font-bold text-slate-900 mt-1">$0.00</h3>
+            <span class="text-xs font-medium text-emerald-600 flex items-center gap-1 mt-1">
+              <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> All recorded sales
+            </span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <i data-lucide="wallet" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <!-- Orders Count -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Receipts Issued</p>
+            <h3 id="stat-total-orders" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+            <span class="text-xs font-medium text-slate-500 flex items-center gap-1 mt-1">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Verified receipts
+            </span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+            <i data-lucide="receipt" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <!-- Today's Sales -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Today's Sales</p>
+            <h3 id="stat-today-revenue" class="text-2xl font-bold text-slate-900 mt-1">$0.00</h3>
+            <span id="stat-today-orders" class="text-xs font-medium text-slate-500 flex items-center gap-1 mt-1">
+              0 orders today
+            </span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <i data-lucide="calendar" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <!-- Pending / Unpaid -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending / COD</p>
+            <h3 id="stat-pending-orders" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+            <span class="text-xs font-medium text-slate-500 flex items-center gap-1 mt-1">
+              Needs settlement
+            </span>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <i data-lucide="clock" class="w-6 h-6"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions & Recent Orders Split -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Recent Orders Feed -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Recent Receipts</h2>
+              <p class="text-xs text-slate-500">Latest virtual sales and receipts issued</p>
+            </div>
+            <button onclick="switchTab('history')" class="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center gap-1">
+              View All <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <div id="dashboard-recent-orders" class="space-y-3">
+            <!-- Dynamic Recent Sales -->
+          </div>
+        </div>
+
+        <!-- Store Profile & Fast QR Actions -->
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900 mb-2">Store Identity</h3>
+            <p class="text-xs text-slate-500 mb-4">Information that appears on all your generated virtual receipts.</p>
+            
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                <span class="text-slate-500">Business Name</span>
+                <span id="quick-store-name" class="font-semibold text-slate-800">Apex Store</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                <span class="text-slate-500">Currency</span>
+                <span id="quick-store-currency" class="font-mono font-semibold text-slate-800">USD ($)</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                <span class="text-slate-500">Phone / WhatsApp</span>
+                <span id="quick-store-phone" class="font-semibold text-slate-800">+1 234 567 890</span>
+              </div>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-slate-500">Receipt Verification</span>
+                <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <i data-lucide="shield-check" class="w-3 h-3"></i> QR Enabled
+                </span>
+              </div>
+            </div>
+
+            <button onclick="openSettingsModal()" class="w-full mt-4 py-2 px-3 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 transition flex items-center justify-center gap-2">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Customize Store Details
+            </button>
+          </div>
+
+          <!-- Quick QR Scanner Promo Card -->
+          <div class="rounded-2xl bg-gradient-to-br from-indigo-50 to-brand-50 border border-brand-100 p-5">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="p-2 rounded-lg bg-brand-600 text-white">
+                <i data-lucide="qr-code" class="w-5 h-5"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 text-sm">Scan Customer QR</h4>
+            </div>
+            <p class="text-xs text-slate-600 mb-3">
+              When a customer brings their virtual receipt or you want to verify an authentic order, open the scanner to inspect immediately.
+            </p>
+            <button onclick="switchTab('scan-qr')" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i> Open Camera Scanner
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 2: NEW SALE & VIRTUAL RECEIPT FORM -->
+    <section id="tab-new-sale" class="tab-content hidden space-y-6">
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Record Sold Product & Virtual Receipt</h1>
+          <p class="text-sm text-slate-500">Fill in product details and customer info to generate a verified virtual receipt with QR code.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="resetSaleForm()" class="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-600 transition flex items-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Clear Form
+          </button>
+        </div>
+      </div>
+
+      <form id="sale-form" onsubmit="handleCreateReceipt(event)" class="space-y-6">
+        
+        <!-- SECTION 1: CUSTOMER DETAILS (Sold To Whom) -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+            <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+              <i data-lucide="user-check" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Customer Details (Sold To)</h3>
+              <p class="text-xs text-slate-500">Who is purchasing this product? This info is included on their virtual receipt.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Customer Name -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Customer Full Name <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="cust-name" required placeholder="e.g. Sarah Jenkins"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm transition" />
+            </div>
+
+            <!-- Customer Phone/WhatsApp -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Phone / WhatsApp Number <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="cust-phone" required placeholder="e.g. +1 555-019-2831"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm transition" />
+            </div>
+
+            <!-- Customer Email -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Email Address <span class="text-slate-400 font-normal">(Optional)</span>
+              </label>
+              <input type="email" id="cust-email" placeholder="sarah@example.com"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm transition" />
+            </div>
+
+            <!-- Delivery Address -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Shipping / Delivery Address
+              </label>
+              <input type="text" id="cust-address" placeholder="e.g. Apt 4B, 742 Evergreen Terrace, Springfield"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm transition" />
+            </div>
+
+            <!-- Sale Date & Receipt No -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Receipt Number (Auto Generated)
+              </label>
+              <div class="relative">
+                <input type="text" id="receipt-number" readonly
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono text-sm font-semibold text-slate-800" />
+                <button type="button" onclick="generateNewReceiptNo()" title="Regenerate Receipt Number" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-700">
+                  <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SECTION 2: PRODUCT DETAILS -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <i data-lucide="package" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 text-base">Product Details Sold</h3>
+                <p class="text-xs text-slate-500">Add the item or multiple items included in this order.</p>
+              </div>
+            </div>
+            <button type="button" onclick="addProductItemRow()" class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-brand-200">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Another Product
+            </button>
+          </div>
+
+          <!-- Product Line Items Container -->
+          <div id="product-items-list" class="space-y-4">
+            <!-- Dynamic rows will be rendered here -->
+          </div>
+        </div>
+
+        <!-- SECTION 3: PAYMENT & PRICING BREAKDOWN -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Payment Method & Notes -->
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+            <div class="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <i data-lucide="credit-card" class="w-4 h-4"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 text-base">Payment & Sale Conditions</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Method</label>
+                <select id="payment-method" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition">
+                  <option value="Cash">Cash</option>
+                  <option value="Credit / Debit Card">Credit / Debit Card</option>
+                  <option value="Bank Transfer">Bank Transfer / Wire</option>
+                  <option value="Online Payment / Gateway">Online Payment Gateway</option>
+                  <option value="PayPal">PayPal</option>
+                  <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                  <option value="Mobile Wallet (bKash/UPI/Venmo)">Mobile Wallet</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Status</label>
+                <select id="payment-status" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition font-medium">
+                  <option value="Paid" class="text-emerald-600 font-semibold">Paid in Full</option>
+                  <option value="Pending" class="text-amber-600 font-semibold">Pending / Unpaid</option>
+                  <option value="Partial" class="text-blue-600 font-semibold">Partial Payment</option>
+                  <option value="Cash on Delivery" class="text-purple-600 font-semibold">Cash on Delivery (COD)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Warranty / Return Policy</label>
+                <input type="text" id="order-warranty" placeholder="e.g. 1 Year Official Warranty / 7 Days Replacement"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Sale Date & Time</label>
+                <input type="datetime-local" id="order-date"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Order Notes / Serial Numbers</label>
+              <textarea id="order-notes" rows="2" placeholder="e.g. Serial: SN-928410294. Gift wrapped with red ribbon."
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition"></textarea>
+            </div>
+          </div>
+
+          <!-- Order Summary Calculation Card -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                <span>Summary Breakdown</span>
+                <span class="text-xs font-normal text-slate-500">Live Totals</span>
+              </h3>
+
+              <div class="space-y-3 text-sm">
+                <div class="flex justify-between items-center text-slate-600">
+                  <span>Subtotal</span>
+                  <span id="summary-subtotal" class="font-semibold text-slate-900">$0.00</span>
+                </div>
+
+                <div class="flex justify-between items-center text-slate-600">
+                  <span class="flex items-center gap-1">
+                    Discount
+                    <input type="number" id="calc-discount" min="0" step="any" value="0" oninput="calculateTotals()"
+                      class="w-16 px-1.5 py-0.5 text-xs rounded border border-slate-200 text-right font-mono" />
+                  </span>
+                  <span id="summary-discount" class="font-semibold text-rose-600">-$0.00</span>
+                </div>
+
+                <div class="flex justify-between items-center text-slate-600">
+                  <span class="flex items-center gap-1">
+                    Tax / VAT (%)
+                    <input type="number" id="calc-tax-rate" min="0" max="100" step="any" value="0" oninput="calculateTotals()"
+                      class="w-14 px-1.5 py-0.5 text-xs rounded border border-slate-200 text-right font-mono" />
+                  </span>
+                  <span id="summary-tax" class="font-semibold text-slate-900">$0.00</span>
+                </div>
+
+                <div class="flex justify-between items-center text-slate-600">
+                  <span class="flex items-center gap-1">
+                    Delivery / Shipping
+                    <input type="number" id="calc-shipping" min="0" step="any" value="0" oninput="calculateTotals()"
+                      class="w-16 px-1.5 py-0.5 text-xs rounded border border-slate-200 text-right font-mono" />
+                  </span>
+                  <span id="summary-shipping" class="font-semibold text-slate-900">$0.00</span>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 flex justify-between items-baseline">
+                  <span class="font-bold text-slate-900 text-base">Grand Total</span>
+                  <span id="summary-grand-total" class="font-extrabold text-2xl text-brand-600">$0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="mt-6 pt-4 border-t border-slate-100">
+              <button type="submit" class="w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                <i data-lucide="qr-code" class="w-5 h-5"></i>
+                <span>Generate Virtual Receipt & QR Code</span>
+              </button>
+              <p class="text-[11px] text-center text-slate-400 mt-2">
+                Instantly generates verified digital receipt and opens printable preview.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </form>
+
+    </section>
+
+    <!-- TAB 3: QR CODE SCANNER -->
+    <section id="tab-scan-qr" class="tab-content hidden space-y-6">
+      
+      <div class="max-w-2xl mx-auto text-center space-y-2">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 shadow-sm mb-1">
+          <i data-lucide="scan" class="w-6 h-6"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-slate-900">Virtual Receipt QR Scanner</h1>
+        <p class="text-sm text-slate-500">
+          Point your phone or webcam at any customer's receipt QR code to instantly verify product and buyer details.
+        </p>
+      </div>
+
+      <div class="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xl space-y-6">
+        
+        <!-- Camera Viewfinder Container -->
+        <div class="relative overflow-hidden rounded-2xl bg-slate-950 aspect-[4/3] flex items-center justify-center border-2 border-slate-800 shadow-inner">
+          
+          <!-- Scanner laser effect -->
+          <div id="scanner-laser-bar" class="scanner-laser hidden z-20"></div>
+
+          <!-- The HTML5 Video Viewport -->
+          <div id="qr-reader" class="w-full h-full"></div>
+
+          <!-- Placeholder when camera is stopped -->
+          <div id="scanner-placeholder" class="text-center p-6 space-y-3 z-10">
+            <div class="w-16 h-16 mx-auto rounded-full bg-slate-900 text-slate-400 flex items-center justify-center border border-slate-800">
+              <i data-lucide="camera" class="w-8 h-8"></i>
+            </div>
+            <p class="text-sm font-semibold text-slate-300">Camera is ready</p>
+            <p class="text-xs text-slate-500 max-w-xs mx-auto">Click Start Camera to begin scanning QR codes on virtual or printed receipts.</p>
+          </div>
+
+        </div>
+
+        <!-- Scanner Controls -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button id="btn-start-scanner" onclick="startQRScanner()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md transition flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span>Start Camera Scanner</span>
+          </button>
+          
+          <button id="btn-stop-scanner" onclick="stopQRScanner()" class="hidden w-full sm:w-auto px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm shadow-md transition flex items-center justify-center gap-2">
+            <i data-lucide="square" class="w-4 h-4"></i>
+            <span>Stop Camera</span>
+          </button>
+
+          <!-- Image File Scan Option -->
+          <label class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="image" class="w-4 h-4"></i>
+            <span>Scan from Image File</span>
+            <input type="file" id="qr-file-input" accept="image/*" class="hidden" onchange="handleQRImageUpload(event)" />
+          </label>
+        </div>
+
+        <!-- Manual Receipt Lookup Fallback -->
+        <div class="pt-4 border-t border-slate-100">
+          <p class="text-xs text-center font-medium text-slate-500 mb-2">Or enter Receipt # manually:</p>
+          <div class="flex gap-2">
+            <input type="text" id="manual-receipt-id" placeholder="e.g. REC-2026-..." 
+              class="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono text-xs uppercase" />
+            <button onclick="handleManualLookup()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition">
+              Verify
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Scan Result Toast/Alert -->
+        <div id="scan-feedback" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-3">
+          <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 shrink-0"></i>
+          <div>
+            <p class="font-bold">Receipt Found & Verified!</p>
+            <p id="scan-feedback-text" class="text-emerald-700">Loading receipt details...</p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 4: ORDERS & RECEIPTS HISTORY -->
+    <section id="tab-history" class="tab-content hidden space-y-6">
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-extrabold text-slate-900">Virtual Receipts Directory</h1>
+          <p class="text-sm text-slate-500">Search, view, reprint, or share past sales records.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportOrdersToCSV()" class="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
+          </button>
+          <button onclick="backupOrdersJSON()" class="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="database" class="w-3.5 h-3.5"></i> Backup
+          </button>
+          <label class="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+            <i data-lucide="upload" class="w-3.5 h-3.5"></i> Restore
+            <input type="file" accept=".json" class="hidden" onchange="restoreOrdersJSON(event)" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div class="relative w-full md:w-80">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <input type="text" id="order-search-input" oninput="renderOrdersHistory()" placeholder="Search by customer, phone, receipt # or product..."
+            class="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs transition" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <select id="order-status-filter" onchange="renderOrdersHistory()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+            <option value="ALL">All Payment Statuses</option>
+            <option value="Paid">Paid Only</option>
+            <option value="Pending">Pending Only</option>
+            <option value="Partial">Partial Payment</option>
+            <option value="Cash on Delivery">Cash on Delivery</option>
+          </select>
+          <span id="filtered-count" class="text-xs text-slate-500 ml-2 font-medium">0 records</span>
+        </div>
+      </div>
+
+      <!-- Orders Table Container -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
+                <th class="py-3.5 px-4">Receipt #</th>
+                <th class="py-3.5 px-4">Date & Time</th>
+                <th class="py-3.5 px-4">Sold To (Customer)</th>
+                <th class="py-3.5 px-4">Products</th>
+                <th class="py-3.5 px-4 text-right">Total</th>
+                <th class="py-3.5 px-4 text-center">Status</th>
+                <th class="py-3.5 px-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="orders-empty-state" class="hidden p-12 text-center">
+          <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+            <i data-lucide="inbox" class="w-8 h-8"></i>
+          </div>
+          <h4 class="font-bold text-slate-800 text-sm">No Receipts Found</h4>
+          <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">There are no sales records matching your current filter. Record a new sale to issue your first receipt!</p>
+          <button onclick="switchTab('new-sale')" class="mt-4 px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition">
+            Create Virtual Receipt
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: VIRTUAL RECEIPT & QR PREVIEW (PRINTABLE) -->
+  <!-- ============================================== -->
+  <div id="receipt-modal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    
+    <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden my-auto border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Top Action Bar (hidden in print) -->
+      <div class="no-print bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+          <span class="text-xs font-semibold tracking-wide uppercase">Official Virtual Receipt</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print / PDF
+          </button>
+          <button onclick="shareViaWhatsApp()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i> WhatsApp
+          </button>
+          <button onclick="copyReceiptLink()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="link" class="w-3.5 h-3.5"></i> Copy Link
+          </button>
+          <button onclick="closeReceiptModal()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Receipt Canvas -->
+      <div id="printable-receipt-area" class="receipt-paper p-6 sm:p-8 bg-white text-slate-900 space-y-6">
+        
+        <!-- Receipt Header -->
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-200 pb-5">
+          <div>
+            <h2 id="receipt-store-name" class="text-2xl font-extrabold tracking-tight text-slate-900 font-receipt">Apex Store</h2>
+            <p id="receipt-store-tagline" class="text-xs text-slate-500 mt-0.5">Authentic Online Quality Goods</p>
+            <div class="text-xs text-slate-600 mt-2 space-y-0.5">
+              <p id="receipt-store-phone">Tel: +1 234 567 890</p>
+              <p id="receipt-store-email">orders@apexstore.com</p>
+              <p id="receipt-store-address">123 Commerce Blvd, Suite 400</p>
+            </div>
+          </div>
+
+          <div class="sm:text-right">
+            <div class="inline-block px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase mb-2" id="receipt-status-pill">
+              PAID IN FULL
+            </div>
+            <p class="text-xs text-slate-400 uppercase font-mono">Receipt No.</p>
+            <p id="receipt-view-id" class="text-lg font-mono font-bold text-slate-900">REC-2026-0001</p>
+            <p id="receipt-view-date" class="text-xs text-slate-500 mt-1">Oct 20, 2026 03:15 PM</p>
+          </div>
+        </div>
+
+        <!-- Customer & Order Metadata Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/75 p-4 rounded-2xl border border-slate-100 text-xs">
+          <div>
+            <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px] mb-1">Billed & Sold To:</p>
+            <p id="receipt-cust-name" class="text-sm font-bold text-slate-900">Sarah Jenkins</p>
+            <p id="receipt-cust-phone" class="text-slate-600 mt-0.5">+1 555-019-2831</p>
+            <p id="receipt-cust-email" class="text-slate-500">sarah@example.com</p>
+            <p id="receipt-cust-address" class="text-slate-600 mt-1 italic">Apt 4B, 742 Evergreen Terrace</p>
+          </div>
+          <div>
+            <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px] mb-1">Transaction Details:</p>
+            <p><span class="text-slate-500">Payment:</span> <span id="receipt-pay-method" class="font-semibold text-slate-800">Credit Card</span></p>
+            <p><span class="text-slate-500">Warranty:</span> <span id="receipt-warranty-info" class="font-semibold text-slate-800">1 Year Official</span></p>
+            <p id="receipt-notes-container" class="mt-1 pt-1 border-t border-slate-200/50"><span class="text-slate-500">Notes:</span> <span id="receipt-notes" class="text-slate-700">None</span></p>
+          </div>
+        </div>
+
+        <!-- Product Line Items Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b-2 border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                <th class="py-2">Item Description</th>
+                <th class="py-2 text-center">Qty</th>
+                <th class="py-2 text-right">Unit Price</th>
+                <th class="py-2 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="receipt-items-tbody" class="divide-y divide-slate-100">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals & QR Code Verification Section -->
+        <div class="pt-3 border-t-2 border-dashed border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6">
+          
+          <!-- Scannable QR Code Box -->
+          <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
+            <div id="receipt-qrcode-canvas" class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm shrink-0"></div>
+            <div>
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                <i data-lucide="shield-check" class="w-4 h-4 text-brand-600"></i>
+                <span>Scan to Verify</span>
+              </div>
+              <p class="text-[11px] text-slate-500 max-w-[170px] mt-0.5 leading-snug">
+                Scan with smartphone camera to view or confirm authentic virtual receipt.
+              </p>
+              <button onclick="downloadQRCodePNG()" class="no-print text-[11px] font-semibold text-brand-600 hover:text-brand-800 mt-1 inline-flex items-center gap-1">
+                <i data-lucide="download" class="w-3 h-3"></i> Save QR Image
+              </button>
+            </div>
+          </div>
+
+          <!-- Financial Calculation Totals -->
+          <div class="w-full sm:w-60 space-y-1.5 text-xs">
+            <div class="flex justify-between text-slate-500">
+              <span>Subtotal</span>
+              <span id="receipt-subtotal" class="font-medium text-slate-800">$0.00</span>
+            </div>
+            <div id="receipt-discount-row" class="flex justify-between text-rose-600">
+              <span>Discount</span>
+              <span id="receipt-discount">-$0.00</span>
+            </div>
+            <div id="receipt-tax-row" class="flex justify-between text-slate-500">
+              <span id="receipt-tax-label">Tax / VAT</span>
+              <span id="receipt-tax">$0.00</span>
+            </div>
+            <div id="receipt-shipping-row" class="flex justify-between text-slate-500">
+              <span>Shipping</span>
+              <span id="receipt-shipping">$0.00</span>
+            </div>
+            <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
+              <span class="font-bold text-slate-900 text-sm">Total Paid</span>
+              <span id="receipt-grand-total" class="font-extrabold text-xl text-slate-900 font-mono">$0.00</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Receipt Footer Notice -->
+        <div class="text-center pt-4 border-t border-slate-100 text-[11px] text-slate-400 space-y-1">
+          <p id="receipt-footer-msg">Thank you for your business! Please keep this virtual receipt for warranty service.</p>
+          <p class="font-mono text-[9px] text-slate-400">Electronic Verification Hash: <span id="receipt-hash">#...</span></p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: STORE SETTINGS -->
+  <!-- ============================================== -->
+  <div id="settings-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+            <i data-lucide="store" class="w-4 h-4"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-lg">Store & Receipt Settings</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="settings-form" onsubmit="handleSaveSettings(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Store / Business Name</label>
+          <input type="text" id="setting-store-name" required
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Tagline / Slogan</label>
+          <input type="text" id="setting-store-tagline"
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Currency Symbol</label>
+            <input type="text" id="setting-currency" required placeholder="$ or € or £ or ৳"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Phone / WhatsApp</label>
+            <input type="text" id="setting-phone"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Support Email</label>
+            <input type="email" id="setting-email"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Address / Location</label>
+            <input type="text" id="setting-address"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Receipt Footer Note / Return Policy</label>
+          <textarea id="setting-footer" rows="2"
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <button type="button" onclick="loadSampleDemoData()" class="text-xs text-brand-600 hover:text-brand-800 font-semibold">
+            Load Demo Data
+          </button>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50">
+              Cancel
+            </button>
+            <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold shadow-sm">
+              Save Settings
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
