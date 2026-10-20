@@ -33,11 +33,21 @@ let currentViewingOrder = null;
 let html5QrScannerInstance = null;
 let currentScannerRunning = false;
 
-// Pre-check verification mode immediately (before DOMContentLoaded) to eliminate any background flash
+// Pre-check verification mode and admin authentication gate immediately to eliminate any background flash
+const ADMIN_AUTH_KEY = 'swapee_admin_authenticated_v1';
+const ADMIN_VALID_USER = 'rgg260747@gmail.com';
+const ADMIN_VALID_PASS = 'rgg260747@gmail.com';
+
 if (window.location.search && window.location.search.indexOf('receipt=') !== -1) {
   isCustomerVerificationMode = true;
   document.documentElement.classList.add('verification-mode');
   if (document.body) document.body.classList.add('verification-mode');
+} else {
+  try {
+    if (localStorage.getItem(ADMIN_AUTH_KEY) !== 'true') {
+      document.documentElement.classList.add('admin-locked');
+    }
+  } catch (e) {}
 }
 
 // Initialize on DOM Ready
@@ -56,10 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   applySettingsToUI();
   resetSaleForm();
-  updateDashboardStats();
-  renderRecentDashboardOrders();
-  renderOrdersHistory();
-  handleDeepLink();
+  checkAdminAuthenticationState();
 
   window.addEventListener('popstate', handleDeepLink);
 });
@@ -69,8 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
    ========================================================================== */
 
 function wipeAndResetAllData() {
+  if (isCustomerVerificationMode || !isAdminLoggedIn()) {
+    showToast('Admin authentication required', 'error');
+    return;
+  }
   if (confirm('Are you sure you want to wipe all stored orders and reset to a clean SWAPEE database?')) {
-    localStorage.clear();
+    localStorage.removeItem(STORAGE_KEY_ORDERS);
+    localStorage.removeItem(STORAGE_KEY_SETTINGS);
     appSettings = { ...defaultSettings };
     orders = getInitialSampleOrders();
     saveSettings(appSettings);
@@ -184,7 +196,7 @@ function getInitialSampleOrders() {
    ========================================================================== */
 
 function switchTab(tabId) {
-  if (isCustomerVerificationMode) return;
+  if (isCustomerVerificationMode || !isAdminLoggedIn()) return;
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
 
   const activeTab = document.getElementById(`tab-${tabId}`);
@@ -724,7 +736,11 @@ function loadSWAPEESampleReceipt() {
    ========================================================================== */
 
 function handleCreateReceipt(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
+  if (isCustomerVerificationMode || !isAdminLoggedIn()) {
+    showToast('Admin authentication required', 'error');
+    return;
+  }
 
   const receiptNo = document.getElementById('receipt-number').value.trim() || generateReceiptNumber();
   const cashier = document.getElementById('order-cashier').value.trim() || 'ASHA';
@@ -1380,6 +1396,7 @@ function handleWhatsAppDirect(orderId) {
 }
 
 function deleteOrderRecord(orderId) {
+  if (isCustomerVerificationMode || !isAdminLoggedIn()) return;
   if (confirm(`Delete receipt ${orderId}?`)) {
     orders = orders.filter(o => o.id !== orderId);
     saveOrders(orders);
@@ -1476,7 +1493,7 @@ function renderRecentDashboardOrders() {
    ========================================================================== */
 
 function openSettingsModal() {
-  if (isCustomerVerificationMode) return;
+  if (isCustomerVerificationMode || !isAdminLoggedIn()) return;
   document.getElementById('setting-store-name').value = appSettings.name;
   document.getElementById('setting-store-tagline').value = appSettings.tagline;
   document.getElementById('setting-vat').value = appSettings.vatNo;
@@ -1602,6 +1619,98 @@ function restoreOrdersJSON(e) {
 }
 
 /* ==========================================================================
+   ADMIN AUTHENTICATION & ACCESS CONTROL
+   ========================================================================== */
+
+function isAdminLoggedIn() {
+  try {
+    return localStorage.getItem(ADMIN_AUTH_KEY) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+function handleAdminLogin(e) {
+  if (e) e.preventDefault();
+  const user = (document.getElementById('admin-username-input')?.value || '').trim();
+  const pass = document.getElementById('admin-password-input')?.value || '';
+  const errorEl = document.getElementById('admin-login-error');
+  const errorText = document.getElementById('admin-login-error-text');
+
+  if (user.toLowerCase() === ADMIN_VALID_USER.toLowerCase() && pass === ADMIN_VALID_PASS) {
+    if (errorEl) errorEl.classList.add('hidden');
+    localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+    document.documentElement.classList.remove('admin-locked');
+    checkAdminAuthenticationState();
+    showToast('Signed in successfully as Administrator', 'success');
+  } else {
+    if (errorEl) {
+      if (errorText) errorText.textContent = 'Invalid username or password. Access restricted to store administrator.';
+      errorEl.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function handleAdminLogout() {
+  if (confirm('Are you sure you want to sign out of the SWAPEE store administrator portal?')) {
+    localStorage.removeItem(ADMIN_AUTH_KEY);
+    document.documentElement.classList.add('admin-locked');
+    checkAdminAuthenticationState();
+    showToast('Signed out of admin portal', 'info');
+  }
+}
+
+function toggleAdminPasswordVisibility() {
+  const input = document.getElementById('admin-password-input');
+  const icon = document.getElementById('admin-pw-toggle-icon');
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) icon.setAttribute('data-lucide', 'eye-off');
+  } else {
+    input.type = 'password';
+    if (icon) icon.setAttribute('data-lucide', 'eye');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+function checkAdminAuthenticationState() {
+  if (isCustomerVerificationMode) {
+    const loginModal = document.getElementById('admin-login-modal');
+    if (loginModal) loginModal.classList.add('hidden');
+    return;
+  }
+
+  const loginModal = document.getElementById('admin-login-modal');
+  const header = document.querySelector('header');
+  const main = document.querySelector('main');
+
+  if (isAdminLoggedIn()) {
+    document.documentElement.classList.remove('admin-locked');
+    if (loginModal) loginModal.classList.add('hidden');
+    if (header) header.classList.remove('hidden');
+    if (main) main.classList.remove('hidden');
+    updateDashboardStats();
+    renderRecentDashboardOrders();
+    renderOrdersHistory();
+  } else {
+    document.documentElement.classList.add('admin-locked');
+    if (loginModal) {
+      loginModal.classList.remove('hidden');
+      loginModal.classList.add('flex');
+    }
+    if (header) header.classList.add('hidden');
+    if (main) main.classList.add('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+}
+window.handleAdminLogin = handleAdminLogin;
+window.handleAdminLogout = handleAdminLogout;
+window.toggleAdminPasswordVisibility = toggleAdminPasswordVisibility;
+window.checkAdminAuthenticationState = checkAdminAuthenticationState;
+
+/* ==========================================================================
    ROUTING & UTILITIES
    ========================================================================== */
 
@@ -1620,18 +1729,11 @@ function showVerifiedAuthenticToast() {
     verifiedToastTimer = null;
   }
 
-  // Make element flex and visible
-  toast.classList.remove('hidden');
-  toast.classList.add('flex');
+  // Add the CSS class show-toast which slides it up from the bottom
+  toast.classList.add('show-toast');
   if (window.lucide) lucide.createIcons();
 
-  // Smooth entrance: slide up from bottom
-  requestAnimationFrame(() => {
-    toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
-    toast.classList.add('translate-y-0', 'opacity-100');
-  });
-
-  // Automatically dismiss after 5 seconds
+  // Automatically dismiss after 5 seconds (5000ms)
   verifiedToastTimer = setTimeout(() => {
     dismissVerifiedToast();
   }, 5000);
@@ -1646,14 +1748,8 @@ function dismissVerifiedToast() {
     verifiedToastTimer = null;
   }
 
-  // Smooth exit: slide down to bottom & fade out
-  toast.classList.remove('translate-y-0', 'opacity-100');
-  toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
-
-  setTimeout(() => {
-    toast.classList.remove('flex');
-    toast.classList.add('hidden');
-  }, 500);
+  // Remove show-toast class to slide it smoothly down below the bottom of the screen
+  toast.classList.remove('show-toast');
 }
 window.showVerifiedAuthenticToast = showVerifiedAuthenticToast;
 window.dismissVerifiedToast = dismissVerifiedToast;

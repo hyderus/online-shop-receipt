@@ -54,10 +54,12 @@ body, html, input, select, textarea, button, .font-thermal, .receipt-paper, #pri
 html.verification-mode header,
 html.verification-mode main,
 html.verification-mode #settings-modal,
+html.verification-mode #admin-login-modal,
 html.verification-mode #customer-verification-portal,
 body.verification-mode header,
 body.verification-mode main,
 body.verification-mode #settings-modal,
+body.verification-mode #admin-login-modal,
 body.verification-mode #customer-verification-portal {
   display: none !important;
 }
@@ -80,8 +82,44 @@ body.verification-mode #receipt-modal-actions-bar {
   display: none !important;
 }
 
-#verified-authentic-toast.hidden {
+/* Admin Lock screen helper */
+html.admin-locked header,
+html.admin-locked main,
+body.admin-locked header,
+body.admin-locked main {
   display: none !important;
+}
+
+/* Floating Verified Authentic Toast (Bottom Popup) */
+#verified-authentic-toast {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(140px) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  z-index: 99999 !important;
+  width: 92% !important;
+  max-width: 440px !important;
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0d9488 100%) !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(167, 243, 208, 0.5) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 25px rgba(16, 185, 129, 0.3) !important;
+  padding: 14px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, visibility 0.4s !important;
+  pointer-events: none !important;
+}
+
+#verified-authentic-toast.show-toast {
+  transform: translateX(-50%) translateY(0) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* Thermal receipt paper mode font */
@@ -155,6 +193,7 @@ body.verification-mode #receipt-modal-actions-bar {
   header,
   nav,
   main,
+  #admin-login-modal,
   #toast-container,
   #settings-modal,
   .no-print {
